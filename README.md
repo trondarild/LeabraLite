@@ -1,5 +1,5 @@
 # LeabraLite
-A processing port and modification of the Leabra neural modeling framework
+A processing port and modification of the Leabra neural modeling framework. Based on a python port of Leabra 8.0 (TODO add link)
 
 ## Modifications
 1. Connection class is abstract, and is implemented by
