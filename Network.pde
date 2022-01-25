@@ -18,6 +18,19 @@ class NetworkSpec{
 
 }
 
+//
+// network modules 
+//
+interface NetworkModule {
+    String name();
+    Layer[] layers();
+    Connection[] connections();
+    void cycle(); 
+    void draw();
+    Layer layer(int code);
+
+}
+
 class Network{
     // """Leabra Network class"""
     NetworkSpec spec;
@@ -31,6 +44,7 @@ class Network{
     ArrayList<Layer> layers = new ArrayList<Layer>();
     ArrayList<Connection> connections = new ArrayList<Connection>();
     ArrayList<Reservoir> reservoirs = new ArrayList<Reservoir>();
+    ArrayList<NetworkModule> modules = new ArrayList<NetworkModule>();
     Map<String, FloatList> inputs = new HashMap<String, FloatList>();
     Map<String, FloatList> outputs = new HashMap<String, FloatList>();
 
@@ -95,6 +109,13 @@ class Network{
 
     void add_reservoir(Reservoir res) {
         this.reservoirs.add(res);
+    }
+
+    void add_module(NetworkModule mod) {
+        this.modules.add(mod);
+        // add layers and connections in module
+        for(Layer l: mod.layers()) this.add_layer(l);
+        for(Connection c: mod.connections()) this.add_connection(c);
     }
 
     void build(){
@@ -245,13 +266,15 @@ class Network{
         // takes care of minus (prediction) and
         // plus (sensing, outcome) phases
         this.pre_cycle();
-
+        for (NetworkModule mod: this.modules)
+            mod.cycle();
         for (Connection conn : this.connections)
             conn.cycle();
         for (Layer layer : this.layers)
             layer.cycle(this.phase);
         for (Reservoir res: this.reservoirs)
             res.cycle();
+        
         this.cycle_count += 1;
         this.cycle_tot   += 1;
     
