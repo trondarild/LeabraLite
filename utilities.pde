@@ -1139,3 +1139,39 @@ float[] set_one(float[] a, int ix) {
   a[ix] = 1.0;
   return a;
 }
+
+void drawStrip(float[] data, String legend){
+    float[][] viz = {data};
+    
+    translate(0, 20);
+    pushMatrix();
+    text(legend, 0,0);
+    pushMatrix();
+    translate(100, -10);
+    drawColGrid(0,0, 10, multiply(200, viz));
+    popMatrix();
+    popMatrix();
+        
+}
+
+void drawBarChart(float[] data, String legend){
+    translate(0, 100);
+    pushMatrix();
+    text(legend, 0,0);
+    pushMatrix();
+    translate(100, -10);
+    barchart_array(data, "");
+    popMatrix();
+    popMatrix();
+}
+
+void drawTimeSeriesPlot(float[][] data, String legend){
+        translate(0, 100);
+        pushMatrix();
+        text(legend, 0,0);
+        pushMatrix();
+        translate(100, -10);
+        drawTimeSeries(data, 0., 1., 1., 0., null);
+        popMatrix();
+        popMatrix();
+    }
