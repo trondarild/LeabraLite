@@ -69,6 +69,10 @@ class Layer implements ConnectableComposite {
       return activities();
     }
 
+    float[] output() {
+        return activities();
+    }
+
     float[] activities(){
         // """Return the matrix of the units's activities"""
         float[] retval = zeros(units.length);
