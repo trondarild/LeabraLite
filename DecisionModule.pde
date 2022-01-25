@@ -101,11 +101,13 @@ class DecisionModule implements NetworkModule {
         text(this.name, 0,0);
 
         // draw the layers
-        drawLayer(value_layer);
-        drawLayer(spatial_ix_layer);
+        //drawStrip(value_layer.output(), value_layer.name());
+        drawBarChart(value_layer.getOutput(), value_layer.name());
+        //drawStrip(spatial_ix_layer.output(), spatial_ix_layer.name());
+        drawBarChart(spatial_ix_layer.output(), spatial_ix_layer.name());
         drawBarChart(acc.getOutput(), "Acc output");
         translate(0,10);
-        drawLayer(choice_layer);
+        drawStrip(choice_layer.output(), choice_layer.name());
         popMatrix();
 
     }

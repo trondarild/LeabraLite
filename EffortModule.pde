@@ -115,7 +115,7 @@ class EffortModule implements NetworkModule {
 
     float[][] generateEffortWeights(int sz) {
         float[][] retval = zeros(sz, sz);
-        for (int j = 0; j < sz; ++j) {
+        for (int j = 1; j < sz; ++j) { // dont include first, only on at zero
             for (int i = 0; i < sz; ++i) {
                 retval[j][i] = i <= j ? 1 : 0;    
             }    

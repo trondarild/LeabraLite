@@ -5,20 +5,22 @@ class ValenceLearningModule implements NetworkModule {
         learning rate.
     */
     static final int NEG_LR = 0;
+    static final int POS_LR = 4;
     static final int PROPERTY = 1;
     static final int AVOIDANCE = 2;
     static final int APPROACH = 3;
 
     String name = "Valence learning module";
     int popsize = 1; // size of populations representing positive and negative valence
-    Layer[] layers = new Layer[4];
-    Connection[] connections = new Connection[3];
+    Layer[] layers = new Layer[5];
+    Connection[] connections = new Connection[4];
 
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
 
     // layers
     Layer neg_lr_layer; // choline-like, modulates learning rate on neg. valence
+    Layer pos_lr_layer; // dopa-like, modulates learning rate on pos. valence
     Layer property_layer; // input interface; projects to valence layers; proj. susc. to learning rate mod
     Layer avoidance_layer; // learns negative valence
     Layer approach_layer; // learns positive valence
@@ -29,6 +31,7 @@ class ValenceLearningModule implements NetworkModule {
     LayerConnection property_avoidance_conn;
     LayerConnection property_approach_conn;
     DendriteConnection lr_avoidance_conn;
+    DendriteConnection lr_approach_conn;
 
     ConnectableWeightSpec chol_w_spec = new ConnectableWeightSpec();
 
@@ -72,17 +75,20 @@ class ValenceLearningModule implements NetworkModule {
 
         // layers
         neg_lr_layer = new Layer(1, new LayerSpec(false), excite_unit_spec, HIDDEN, "ACh (in)");
+        pos_lr_layer = new Layer(1, new LayerSpec(false), excite_unit_spec, HIDDEN, "DA (in)"); // positive learning is likely dopa, but model as same ACh here
         property_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Properties (in)");
         avoidance_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, OUTPUT, "Neg val (out)");
         approach_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, OUTPUT, "Pos val (out)");
 
         // connections
         property_avoidance_conn = new LayerConnection(property_layer, avoidance_layer, oto_spec, chol_w_spec);
-        property_approach_conn = new LayerConnection(property_layer, approach_layer, oto_spec);
+        property_approach_conn = new LayerConnection(property_layer, approach_layer, oto_spec, chol_w_spec);
         lr_avoidance_conn = new DendriteConnection(neg_lr_layer, property_avoidance_conn, choline_spec);
+        lr_approach_conn = new DendriteConnection(pos_lr_layer, property_approach_conn, choline_spec);
 
         int ix = 0;
         layers[ix++] = neg_lr_layer;
+        layers[ix++] = pos_lr_layer;
         layers[ix++] = property_layer;
         layers[ix++] = avoidance_layer;
         layers[ix++] = approach_layer;
@@ -90,6 +96,7 @@ class ValenceLearningModule implements NetworkModule {
         connections[ix++] = property_avoidance_conn;
         connections[ix++] = property_approach_conn;
         connections[ix++] = lr_avoidance_conn;
+        connections[ix++] = lr_approach_conn;
 
 
     }
@@ -101,6 +108,8 @@ class ValenceLearningModule implements NetworkModule {
         switch(code) {
             case NEG_LR:
                 return neg_lr_layer;
+            case POS_LR:
+                return pos_lr_layer;
             case PROPERTY:
                 return property_layer;
             case AVOIDANCE:
@@ -120,7 +129,7 @@ class ValenceLearningModule implements NetworkModule {
         pushStyle();
         fill(60);
         stroke(100);
-        rect(0, 0, 220, 120, 10);
+        rect(0, 0, 320, 340, 10);
         popStyle();
 
         // add name
@@ -128,10 +137,14 @@ class ValenceLearningModule implements NetworkModule {
         text(this.name, 0,0);
 
         // draw the layers
-        drawLayer(neg_lr_layer);
-        drawLayer(property_layer);
-        drawLayer(avoidance_layer);
-        drawLayer(approach_layer);
+        drawStrip(neg_lr_layer.output(), neg_lr_layer.name());
+        drawStrip(pos_lr_layer.output(), pos_lr_layer.name());
+        drawStrip(property_layer.output(), property_layer.name());
+        drawStrip(avoidance_layer.output(), avoidance_layer.name());
+        drawStrip(approach_layer.output(), approach_layer.name());
+        // draw weights for inspection
+        drawBarChart(ravel(property_avoidance_conn.weights()), "Avoidance w");
+        drawBarChart(ravel(property_approach_conn.weights()), "Approach w");
         popMatrix();
     }
 
