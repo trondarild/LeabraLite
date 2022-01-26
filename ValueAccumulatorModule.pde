@@ -2,7 +2,9 @@ class ValueAccumulatorModule implements NetworkModule {
     /** Attempts to replicate accumulator behaviour described in Balkenius et al 2020
         with layers and connections
 
-        // TODO: add reset layer with ACh that leaks out all charge
+        // TODO: add reset layer with ACh that leaks out all charge:
+            Add input that inhibits Cholinergic shutting of kalium channels, increasing
+            leakage of accumulators
     */
     static final int VALUE = 0;
     static final int SPAT_IX = 1;
