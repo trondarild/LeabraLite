@@ -44,7 +44,7 @@ class ChoiceModule implements NetworkModule {
         excite_unit_spec.act_gain=100;
         excite_unit_spec.tau_net=40;
         excite_unit_spec.g_bar_e=1.0;
-        excite_unit_spec.g_bar_l=0.4;
+        excite_unit_spec.g_bar_l=0.1;
         excite_unit_spec.g_bar_i=0.40;
 
         // connection spec
@@ -63,7 +63,7 @@ class ChoiceModule implements NetworkModule {
 
         // connections
         oto_spec.proj = "1to1";
-        oto_spec.rnd_mean = 0.5;
+        oto_spec.rnd_mean = 0.25;
         oto_spec.rnd_var = 0.0;
 
         dopa_spec.proj = "full";
