@@ -55,6 +55,7 @@ class Unit implements Connectable {
     float r_d2 = 0.0;
     float r_a1 = 0.0;
     float r_a2 = 0.0;
+    float r_m1 = 0.0;
 
     Unit(){
         /*        
@@ -235,6 +236,11 @@ class Unit implements Connectable {
 
         this.adapt   = 0;     // adaptation current: causes the rate of activation
                               // to decrease over time
+        this.r_d1 = 0;
+        this.r_d2 = 0;
+        this.r_a1 = 0;
+        this.r_a1 = 0;
+        this.r_m1 = 0;
     }
 
     void update_logs(){
@@ -311,9 +317,9 @@ class UnitSpec{
     float tau_net    = 1.4;     // net input integration time constant (net = g_e * g_bar_e)
     float tau_v_m    = 3.3;     // v_m integration time constant
     // input channels parameters
-    float g_l        = 1.0;     // leak current (constant) # TAT 2022-01-20: controlled by ACh Muscarine receptors?
-    float g_bar_e    = 1.0;     // excitatory maximum conductance
+    float g_l        = 1.0;     // leak current (constant) # TAT 2022-01-26: controlled by D1, D2, M1; # TAT 2022-01-20: controlled by ACh Muscarine receptors?
     float g_bar_l    = 0.1;     // leak maximum conductance
+    float g_bar_e    = 1.0;     // excitatory maximum conductance
     float g_bar_i    = 1.0;     // inhibitory maximum conductance
     // reversal potential // TAT what is this?
     float e_rev_e    = 1.0 ;    // excitatory
@@ -360,7 +366,7 @@ class UnitSpec{
     float d2_thr = 0.1; // lower limit for D2 (1000nM) "
     float a1_thr = 0.8; // upper limit for A1 (70 nm, wide dynamic range)
     float a2_thr = 0.9; // lower limit for A2 (5200 nm, very much higher than a1)
-    String[] impl_receptors = {"D1", "D2"}; // use these names to add to receptor list for a unit
+    String[] impl_receptors = {"D1", "D2", "A1", "A2", "M1"}; // use these names to add to receptor list for a unit
     StringList receptors = new StringList();
 
     float[][] nxx1_conv;
@@ -469,19 +475,30 @@ class UnitSpec{
         """
         */
         // handle modulators
+        unit.r_d1 = 0;
+        unit.r_d2 = 0;
+        unit.r_a1 = 0;
+        unit.r_a2 = 0;
+        unit.r_m1 = 0;
         if(unit.mod_inputs.size() > 0){
             for (Pair<Integer, Float> p: unit.mod_inputs){
                 float val = p.getValue();
                 switch (p.getKey()) {
                     case ADENOSINE:
-                        unit.r_a1 += val < this.a1_thr ? val : 0.0;
-                        unit.r_a2 += val >= this.a2_thr ? val : 0.0;
+                        if(receptors.hasValue("A1"))
+                            unit.r_a1 += val < this.a1_thr ? val : 0.0;
+                        if(receptors.hasValue("A2"))
+                            unit.r_a2 += val >= this.a2_thr ? val : 0.0;
                         break;
                     case DOPAMINE:
-                        unit.r_d1 += val < this.d1_thr ? val : 0.0;
-                        unit.r_d2 += val >= this.d2_thr ? val : 0.0;
+                        if(receptors.hasValue("D1"))
+                            unit.r_d1 += val < this.d1_thr ? val : 0.0;
+                        if(receptors.hasValue("D2"))
+                            unit.r_d2 += val >= this.d2_thr ? val : 0.0;
                         break;
                     case ACETYLCHOLINE:
+                        if(receptors.hasValue("M1"))
+                            unit.r_m1 += val;
 
                         break;
                     default:
@@ -636,9 +653,12 @@ class UnitSpec{
         // modulate act_thr
         // 2021-12-05 TAT: modulate threshold: act_thr
         // 2022-01-09 TAT: adeno cannot affect threshold alone -> check
-        unit.act_thr = this.logistic(this.c_act_thr
-            - max(0, unit.r_d1 - unit.r_a1)
-            + max(0, unit.r_d2 - unit.r_a2));
+        // 2022-01-26 TAT: try changing indirectly through leakage (See e.g. Neve 2004)
+        // unit.act_thr = this.logistic(this.c_act_thr
+        //     - max(0, unit.r_d1 - unit.r_a1)
+        //     + max(0, unit.r_d2 - unit.r_a2));
+        unit.act_thr = this.c_act_thr;
+            
         // println(unit.name + " r_d1: " + unit.r_d1 + "; r_a1: " + unit.r_a1 );
         // println(unit.name + " r_d2: " + unit.r_d2 + "; r_a2: " + unit.r_a2 );
         // println(unit.name + " thr: " + unit.act_thr);
@@ -665,7 +685,10 @@ class UnitSpec{
         else{
             float gc_e = this.g_bar_e * unit.g_e;
             float gc_i = this.g_bar_i * g_i;
-            float gc_l = this.g_bar_l * this.g_l;
+            float tmp_l = max(0, g_l + (1-g_l)*unit.r_d2*(1-unit.r_a2)
+                 - g_l*unit.r_d1*(1-unit.r_a1) -g_l*unit.r_m1);
+            float gc_l = this.g_bar_l * this.g_l * tmp_l; // TAT 2022-01-26: leakage affected by D1, D2, M1
+            println("tmp_l: " + tmp_l + "; gc_l: " + gc_l);
             float g_e_thr = (  gc_i * (this.e_rev_i - this.act_thr)
                        + gc_l * (this.e_rev_l - this.act_thr)
                        - unit.adapt + this.bias) / (this.act_thr - this.e_rev_e);
