@@ -30,7 +30,7 @@ class LeakyIntegrator implements Connectable{
     void add_inhibitory(float a) {} // not applicable
     void add_excitatory(float a) {}
     void add_modulator(int type, float a) {
-        println(this.name + ": " + type + "; " + a);
+        // println(this.name + ": type= " + type + "; input= " + a);
         this.spec.type = type; // should always be same
         this.mod_inputs.add(a);
     } // type set in spec
@@ -42,6 +42,10 @@ class LeakyIntegrator implements Connectable{
     }
 
     float getOutput() {
+        return store;
+    }
+
+    float output() {
         return store;
     }
 

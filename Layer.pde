@@ -59,7 +59,8 @@ class Layer implements ConnectableComposite {
     void add_to_connections(Connection to) {
         // println("add to " + this.name + ": " + to.spec.wt_scale_rel);
         to_connections.add(to);};
-
+    ArrayList<Connection> from_connections() {return from_connections;}
+    ArrayList<Connection> to_connections() {return to_connections;}
     void  trial_init(){
         // """Initialize the layer for a new trial. Reset all units, decays fbi and ffi."""
         this.spec.trial_init(this);
@@ -67,6 +68,10 @@ class Layer implements ConnectableComposite {
 
     float[] getOutput(){
       return activities();
+    }
+
+    float[] output() {
+        return activities();
     }
 
     float[] activities(){
