@@ -42,6 +42,9 @@ interface ConnectableComposite {
    float avg_act_p_eff();
    void add_from_connections(Connection from);
    void add_to_connections(Connection to);
+   ArrayList<Connection> from_connections();
+   ArrayList<Connection> to_connections();
+   void cycle(String phase);
 }
 
 
@@ -281,7 +284,8 @@ class LayerConnection extends Connection implements ConnectableComposite {
     Layer pre;
     Layer post;
     ConnectableWeight[] units; // to-weights are connectable for inhibition
-    ArrayList<DendriteConnection> to_connections = new   ArrayList<DendriteConnection>();
+    ArrayList<Connection> from_connections = new ArrayList<Connection>(); // not applicable and should be empty, but keep for compatibility
+    ArrayList<Connection> to_connections = new   ArrayList<Connection>();
     float avg_act_p_eff;
 
     LayerConnection(Layer pre_layer, Layer post_layer, ConnectionSpec spec) {
@@ -335,7 +339,18 @@ class LayerConnection extends Connection implements ConnectableComposite {
     void add_from_connections(Connection from) { /* not applicable */}
     void add_to_connections(Connection to) {
         // println(this.name + " add: " + to.name);
-        to_connections.add((DendriteConnection)to);}
+        //to_connections.add((DendriteConnection)to);
+        assert(to instanceof DendriteConnection): "Layerconnection can only be connected to DendriteConnections";
+        to_connections.add(to);
+    }
+    ArrayList<Connection> from_connections() {return from_connections;}
+    ArrayList<Connection> to_connections() {return to_connections;}
+    
+    
+    void cycle(String phase) {
+      // TODO for learning; minus, plus phase for connectableweights
+      // this.cycle();
+    }
 
     public void cycle() {
         
@@ -451,15 +466,29 @@ class ReservoirConnection extends Connection {
 
     ReservoirConnection(Layer pre_layer, Reservoir post_res, ConnectionSpec spec) {
         super(spec);
-        layer = pre_layer;
-        res = post_res;
+        this.layer = pre_layer;
+        this.res = post_res;
+        this.name = layer.name + " -> " + res.name;
         layer.add_from_connections(this);
         res.add_to_connections(this);
         from_layer = true;
         
         this.spec.projection_init(this);
-        this.name = layer.name + " -> " + res.name;
     }
+
+    ReservoirConnection(Reservoir res, Layer layer, ConnectionSpec spec) {
+        super(spec);
+        assert(res != null && layer != null);
+        this.layer = layer;
+        this.res = res;
+        this.name = res.name + " -> " + layer.name;
+        res.add_from_connections(this);
+        layer.add_to_connections(this);
+        from_layer = false;
+        
+        this.spec.projection_init(this);
+    }
+
     ConnectableComposite pre() { return from_layer ? layer : res; }
     ConnectableComposite post() { return from_layer ? res : layer; }
 
@@ -544,12 +573,9 @@ class ConnectionSpec{
         // """Transmit activity."""
         for (Link link : connection.links){
             if (link.post().act_ext() ==0){ // activity not forced
-                //println("conspec : wt_scale_abs= " + this.wt_scale_abs + "; wt_scale= " + connection.wt_scale() + "; link.wt= " + link.wt + "; link.pre().act()= " +link.pre().act() );            
+                // println("conspec preswitch: wt_scale_abs= " + this.wt_scale_abs + "; wt_scale= " + connection.wt_scale() + "; link.wt= " + link.wt + "; link.pre().act()= " +link.pre().act() );            
                 float scaled_act = this.wt_scale_abs * connection.wt_scale() * link.wt * link.pre().act();
-                //if(this.inhibit) // TAT 2021-12-10: support for inhibitory projections
-                //    link.post().add_inhibitory(scaled_act);
-                //else
-                //    link.post().add_excitatory(scaled_act);
+                
                 if(this.inhibit) this.type = GABA; // backward compatibility
                 switch(this.type){
                     case GABA :
@@ -560,7 +586,7 @@ class ConnectionSpec{
                         break;
                     default:
                         // println(link.name);
-                        // println("conspec : " + this.wt_scale_abs + "; " + connection.wt_scale() + "; " + link.wt + "; " +link.pre().act() );
+                        // println("conspec postswitch: " + this.wt_scale_abs + "; " + connection.wt_scale() + "; " + link.wt + "; " +link.pre().act() );
                         link.post().add_modulator(this.type, scaled_act);
 
                 }
@@ -619,8 +645,10 @@ class ConnectionSpec{
     void onetoone_connection(Connection connection){        
         // TODO adapt to dendrite connection
         // creating unit-to-unit links
+        
         connection.links.clear();
         if(pre_indeces != null && post_indeces != null) {
+            
             assert(pre_indeces.length == post_indeces.length);
             for (int i = 0; i < pre_indeces.length; ++i) {
                 Connectable pre_u = connection.pre().units()[pre_indeces[i]];
@@ -636,7 +664,6 @@ class ConnectionSpec{
             // TODO: add assert, checking valid start, ends
             int pre_end = this.pre_endix == -1 ? connection.pre().units().length-1 : this.pre_endix;
             int post_end = this.post_endix == -1 ? connection.post().units().length-1 : this.post_endix;
-            
             assert (pre_end-this.pre_startix + 1 == post_end-this.post_startix + 1) : 
                 connection.name + ": " + (pre_end-this.pre_startix + 1) 
                 + " != " + (post_end-this.post_startix + 1);
@@ -651,6 +678,8 @@ class ConnectionSpec{
                 connection.links.add(connection.createLink(pre_u, post_u, w0, fw0, ix));
             }
         }
+        println("end: " + connection.name);
+        println();
             
     }
 
