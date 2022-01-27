@@ -10,7 +10,12 @@ import javax.sound.midi.MidiMessage;
 MidiBus myBus; 
 int midiDevice  = 0;
 
-TestTemplate test = new TestTemplate(); // template for tests or models
+// TestTemplate test = new TestTemplate(); // template for tests or models
+// TestNetworkModule test = new TestNetworkModule();
+// TestModuleTemplate test = new TestModuleTemplate();
+// TestEffortAchDecisionModules test = new TestEffortAchDecisionModules();
+// TestValueAccMod test = new TestValueAccMod();
+TestModLeakage test = new TestModLeakage();
 
 void setup(){
 	size(600, 1000);
