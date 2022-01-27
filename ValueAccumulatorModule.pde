@@ -2,13 +2,16 @@ class ValueAccumulatorModule implements NetworkModule {
     /** Attempts to replicate accumulator behaviour described in Balkenius et al 2020
         with layers and connections
 
-        // TODO: add reset layer with ACh that leaks out all charge:
+        // TODO 2022-01-26: appears that D2 may be a likelier candiate that M2 for resetting acc:
+                    it too opens K leakage channels, and may be stimulated by a strong DA
+                    burst upon choice completion - could also 
+        // TODO 2022-01-26: add reset layer with ACh that leaks out all charge:
             Add input that inhibits Cholinergic shutting of kalium channels, increasing
             leakage of accumulators
     */
-    static final int VALUE = 0;
-    static final int SPAT_IX = 1;
-    static final int ACC = 2;
+    static final String VALUE = "value";
+    static final String SPAT_IX = "spatial_ix";
+    static final String ACC = "accumulator";
     
     String name = "ValueAccumulatorModule";
     
@@ -18,6 +21,7 @@ class ValueAccumulatorModule implements NetworkModule {
 
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
+    UnitSpec dopa_unit_spec = new UnitSpec();
 
     // layers
     Layer val_in_layer; // value in 
@@ -62,6 +66,9 @@ class ValueAccumulatorModule implements NetworkModule {
         excite_unit_spec.g_bar_l=0.1;
         excite_unit_spec.g_bar_i=0.40;
 
+        dopa_unit_spec.receptors.append("D2"); // for resetting
+        dopa_unit_spec.use_modulators = true;
+
         // connection spec
         full_spec.proj="full";
         full_spec.rnd_type="uniform" ;
@@ -82,7 +89,7 @@ class ValueAccumulatorModule implements NetworkModule {
         spatix_in_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Spatial ix (in)");
         inh_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Inhibition");
         //disinh_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Disinhibition");
-        acc_out_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Accumulator (out)");
+        acc_out_layer = new Layer(layersize, new LayerSpec(false), dopa_unit_spec, HIDDEN, "Accumulator (out)");
         
         int ix = 0;
         layers[ix++] = val_in_layer;
@@ -115,7 +122,7 @@ class ValueAccumulatorModule implements NetworkModule {
     String name() {return name;}
     Layer[] layers() {return layers;}
     Connection[] connections() {return connections;}
-    Layer layer(int l) {
+    Layer layer(String l) {
         switch(l) {
             case VALUE:
                 return val_in_layer; // input
