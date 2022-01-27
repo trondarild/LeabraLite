@@ -15,20 +15,21 @@ class Reservoir implements ConnectableComposite {
     ReservoirSpec spec;
     LeakyIntegrator[] units;
     Buffer[] buffers;
-    float avg_act_p_eff;
+    float avg_act_p_eff = 0.0;
+    float avg_act = 0.0;
 
     // TODO: make special connections for reservoirs
     ArrayList<Connection> from_connections = new ArrayList<Connection>();
     ArrayList<Connection> to_connections = new   ArrayList<Connection>();
 
-    Reservoir(int size, int type, String name) {
+    Reservoir(int size, String name) {
         this.name = name;
         this.size = size;
         //this.type = type;
         this.spec = new ReservoirSpec();
         //this.spec.type = type;
         LeakyIntegratorSpec unit_spec = new LeakyIntegratorSpec();
-        unit_spec.type = type;
+        // unit_spec.type = type;
 
         units = new LeakyIntegrator[size];
         for (int i = 0; i < units.length; ++i) {
@@ -72,9 +73,10 @@ class Reservoir implements ConnectableComposite {
     ArrayList<Connection> to_connections() {return to_connections;}
 
     void cycle(String phase) {
+        this.spec.cycle(this);
         for (int i = 0; i < this.size; ++i) {
-            units[i].calculate_net_in();
-            units[i].cycle();
+            // units[i].calculate_net_in();
+            // units[i].cycle();
             buffers[i] = units[i].getBuffer();
         }
     }
@@ -87,6 +89,10 @@ class Reservoir implements ConnectableComposite {
     }
 
     float[] getOutput() {
+        return output();
+    }
+
+    float[] output() {
         float[] retval = zeros(this.size);
         for (int i = 0; i < this.size; ++i) {
             retval[i] = units[i].getOutput();
@@ -98,5 +104,14 @@ class Reservoir implements ConnectableComposite {
 
 class ReservoirSpec {
     // TODO is this needed?
-    int type = DOPAMINE;
+    // int type = DOPAMINE;
+    
+    void cycle(Reservoir reservoir) {
+        for(LeakyIntegrator u : reservoir.units){
+            u.calculate_net_in();
+            u.cycle();
+        }
+        reservoir.avg_act = mean(reservoir.output());
+        // TODO update logs
+    }
 }

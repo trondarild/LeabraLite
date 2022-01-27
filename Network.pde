@@ -72,7 +72,7 @@ class Network{
         this.build();
     }
 
-    Network (NetworkSpec spec, Layer[] layers, Connection[] connections, ConnectableComposite[] composite){
+    Network (NetworkSpec spec, Layer[] layers, Connection[] connections, ConnectableComposite[] composites){
         this.spec = spec;
         if (this.spec == null)
             this.spec = new NetworkSpec();
@@ -161,7 +161,7 @@ class Network{
             for (int i = 0; i < res.to_connections().size(); ++i) {
                 rel_sum += res.to_connections().get(i).spec.wt_scale_rel;
             }
-            // println(layer.name + ": " + rel_sum + "; " + layer.to_connections.size());
+            println("Network::build: Composites: " + res.name() + ": rel_sum: " + rel_sum + "; to_conn.size: " + res.to_connections().size());
             for (Connection connection : res.to_connections())
                 connection.wt_scale_rel_eff = connection.spec.wt_scale_rel / rel_sum;
         }
