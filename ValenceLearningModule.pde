@@ -4,11 +4,11 @@ class ValenceLearningModule implements NetworkModule {
         It has a choline-like population that modulates
         learning rate.
     */
-    static final int NEG_LR = 0;
-    static final int POS_LR = 4;
-    static final int PROPERTY = 1;
-    static final int AVOIDANCE = 2;
-    static final int APPROACH = 3;
+    static final String NEG_LR = "neg_lr";
+    static final String POS_LR = "pos_lr";
+    static final String PROPERTY = "property";
+    static final String AVOIDANCE = "avoidance";
+    static final String APPROACH = "approach";
 
     String name = "Valence learning module";
     int popsize = 1; // size of populations representing positive and negative valence
@@ -104,7 +104,7 @@ class ValenceLearningModule implements NetworkModule {
     String name() {return name;}
     Layer[] layers() {return layers;}
     Connection[] connections() {return connections;}
-    Layer layer(int code) {
+    Layer layer(String code) {
         switch(code) {
             case NEG_LR:
                 return neg_lr_layer;

@@ -1,8 +1,8 @@
 class EffortModule implements NetworkModule {
     /** Models excitative effort, gain from  a control signal
     */
-    static final int MAGNITUDE = 0;
-    static final int GAIN = 1;
+    static final String MAGNITUDE = "magnitude";
+    static final String GAIN = "gain";
     
     String name = "EffortModule";
     int gainsize = 2;
@@ -70,7 +70,7 @@ class EffortModule implements NetworkModule {
     String name() {return name;}
     Layer[] layers() {return layers;}
     Connection[] connections() {return connections;}
-    Layer layer(int l) {
+    Layer layer(String l) {
         switch(l) {
             case MAGNITUDE:
                 return pe_magnitude_layer; // input

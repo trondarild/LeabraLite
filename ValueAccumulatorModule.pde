@@ -68,6 +68,9 @@ class ValueAccumulatorModule implements NetworkModule {
 
         dopa_unit_spec.receptors.append("D2"); // for resetting
         dopa_unit_spec.use_modulators = true;
+        dopa_unit_spec.g_bar_l = 2.0;
+        dopa_unit_spec.g_l = 0.1;
+        dopa_unit_spec.d2_thr = 0.1;
 
         // connection spec
         full_spec.proj="full";
@@ -145,7 +148,7 @@ class ValueAccumulatorModule implements NetworkModule {
         pushStyle();
         fill(60);
         stroke(100);
-        rect(0, 0, 220, 200, 10);
+        rect(0, 0, 220, 160, 10);
         popStyle();
 
         // add name
