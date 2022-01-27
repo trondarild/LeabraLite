@@ -42,6 +42,9 @@ interface ConnectableComposite {
    float avg_act_p_eff();
    void add_from_connections(Connection from);
    void add_to_connections(Connection to);
+   ArrayList<Connection> from_connections();
+   ArrayList<Connection> to_connections();
+   void cycle(String phase);
 }
 
 
@@ -281,7 +284,8 @@ class LayerConnection extends Connection implements ConnectableComposite {
     Layer pre;
     Layer post;
     ConnectableWeight[] units; // to-weights are connectable for inhibition
-    ArrayList<DendriteConnection> to_connections = new   ArrayList<DendriteConnection>();
+    ArrayList<Connection> from_connections = new ArrayList<Connection>(); // not applicable and should be empty, but keep for compatibility
+    ArrayList<Connection> to_connections = new   ArrayList<Connection>();
     float avg_act_p_eff;
 
     LayerConnection(Layer pre_layer, Layer post_layer, ConnectionSpec spec) {
@@ -335,8 +339,18 @@ class LayerConnection extends Connection implements ConnectableComposite {
     void add_from_connections(Connection from) { /* not applicable */}
     void add_to_connections(Connection to) {
         // println(this.name + " add: " + to.name);
-        to_connections.add((DendriteConnection)to);}
-
+        //to_connections.add((DendriteConnection)to);
+        assert(to instanceof DendriteConnection): "Layerconnection can only be connected to DendriteConnections";
+        to_connections.add(to);
+    }
+    ArrayList<Connection> from_connections() {return from_connections;}
+    ArrayList<Connection> to_connections() {return to_connections;}
+    
+    
+    void cycle(String phase) {
+      // TODO for learning
+      this.cycle();
+    }
     public void cycle() {
         
         // take care of the connectable weight units

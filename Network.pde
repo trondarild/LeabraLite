@@ -43,7 +43,7 @@ class Network{
 
     ArrayList<Layer> layers = new ArrayList<Layer>();
     ArrayList<Connection> connections = new ArrayList<Connection>();
-    ArrayList<Reservoir> reservoirs = new ArrayList<Reservoir>();
+    ArrayList<ConnectableComposite> composites = new ArrayList<ConnectableComposite>();
     ArrayList<NetworkModule> modules = new ArrayList<NetworkModule>();
     Map<String, FloatList> inputs = new HashMap<String, FloatList>();
     Map<String, FloatList> outputs = new HashMap<String, FloatList>();
@@ -72,7 +72,7 @@ class Network{
         this.build();
     }
 
-    Network (NetworkSpec spec, Layer[] layers, Connection[] connections, Reservoir[] reservoirs){
+    Network (NetworkSpec spec, Layer[] layers, Connection[] connections, ConnectableComposite[] composite){
         this.spec = spec;
         if (this.spec == null)
             this.spec = new NetworkSpec();
@@ -92,8 +92,8 @@ class Network{
         for (Connection c : connections) {this.connections.add(c);}
         // this._inputs; 
         // this._outputs = {}, {}
-        assert(reservoirs != null);
-        for(Reservoir r : reservoirs) {this.reservoirs.add(r);}
+        assert(composites != null);
+        for(ConnectableComposite c : composites) {this.composites.add(c);}
         
         this.build();
     }
@@ -107,8 +107,8 @@ class Network{
         this.layers.add(layer);
     }
 
-    void add_reservoir(Reservoir res) {
-        this.reservoirs.add(res);
+    void add_composite(ConnectableComposite comp) {
+        this.composites.add(comp);
     }
 
     void add_module(NetworkModule mod) {
@@ -148,19 +148,21 @@ class Network{
                 }
                 // println(lcon.name + ": " + rel_sum + "; " + lcon.to_connections.size());
                 // handle the dendrite connections of the layerconnection
-                for (DendriteConnection connection : lcon.to_connections)
+                for (Connection connection : lcon.to_connections) {
+                    //DendriteConnection dc = (DendriteConnection) connection;
                     connection.wt_scale_rel_eff = connection.spec.wt_scale_rel / rel_sum;
+                }
 
             }
             
         }
-        for(Reservoir res : this.reservoirs) {
+        for(ConnectableComposite res : this.composites) {
             float rel_sum = 0;
-            for (int i = 0; i < res.to_connections.size(); ++i) {
-                rel_sum += res.to_connections.get(i).spec.wt_scale_rel;
+            for (int i = 0; i < res.to_connections().size(); ++i) {
+                rel_sum += res.to_connections().get(i).spec.wt_scale_rel;
             }
             // println(layer.name + ": " + rel_sum + "; " + layer.to_connections.size());
-            for (Connection connection : res.to_connections)
+            for (Connection connection : res.to_connections())
                 connection.wt_scale_rel_eff = connection.spec.wt_scale_rel / rel_sum;
         }
         
@@ -272,8 +274,8 @@ class Network{
             conn.cycle();
         for (Layer layer : this.layers)
             layer.cycle(this.phase);
-        for (Reservoir res: this.reservoirs)
-            res.cycle();
+        for (ConnectableComposite com: this.composites)
+            com.cycle(this.phase);
         
         this.cycle_count += 1;
         this.cycle_tot   += 1;

@@ -68,8 +68,10 @@ class Reservoir implements ConnectableComposite {
     float avg_act_p_eff() { return avg_act_p_eff;}
     void add_from_connections(Connection from) {from_connections.add(from);};
     void add_to_connections(Connection to) {to_connections.add(to);};
+    ArrayList<Connection> from_connections() {return from_connections;}
+    ArrayList<Connection> to_connections() {return to_connections;}
 
-    void cycle() {
+    void cycle(String phase) {
         for (int i = 0; i < this.size; ++i) {
             units[i].calculate_net_in();
             units[i].cycle();
