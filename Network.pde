@@ -27,7 +27,7 @@ interface NetworkModule {
     Connection[] connections();
     void cycle(); 
     void draw();
-    Layer layer(int code);
+    Layer layer(String code);
 
 }
 
@@ -115,7 +115,9 @@ class Network{
         this.modules.add(mod);
         // add layers and connections in module
         for(Layer l: mod.layers()) this.add_layer(l);
-        for(Connection c: mod.connections()) this.add_connection(c);
+        for(Connection c: mod.connections()) {
+            assert(c != null) : mod.name();
+            this.add_connection(c);}
     }
 
     void build(){

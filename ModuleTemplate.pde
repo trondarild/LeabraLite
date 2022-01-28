@@ -1,6 +1,6 @@
 class ModuleTemplate implements NetworkModule {
-    static final int IN = 0;
-    static final int OUT = 1;
+    static final String IN = "in";
+    static final String OUT = "out";
     
     String name = "ModuleTemplate";
     
@@ -64,7 +64,7 @@ class ModuleTemplate implements NetworkModule {
     String name() {return name;}
     Layer[] layers() {return layers;}
     Connection[] connections() {return connections;}
-    Layer layer(int l) {
+    Layer layer(String l) {
         switch(l) {
             case IN:
                 return in_layer; // input

@@ -688,7 +688,7 @@ class UnitSpec{
             float tmp_l = max(0, g_l + (1-g_l)*unit.r_d2*(1-unit.r_a2)
                  - g_l*unit.r_d1*(1-unit.r_a1) -g_l*unit.r_m1);
             float gc_l = this.g_bar_l * this.g_l * tmp_l; // TAT 2022-01-26: leakage affected by D1, D2, M1
-            println("tmp_l: " + tmp_l + "; gc_l: " + gc_l);
+            // println("tmp_l: " + tmp_l + "; gc_l: " + gc_l + "; r_d2: " + unit.r_d2 + " d2_thr: " + this.d2_thr);
             float g_e_thr = (  gc_i * (this.e_rev_i - this.act_thr)
                        + gc_l * (this.e_rev_l - this.act_thr)
                        - unit.adapt + this.bias) / (this.act_thr - this.e_rev_e);
@@ -715,6 +715,7 @@ class UnitSpec{
         // if phase == 'minus':
         this.update_avgs(unit, dt_integ);
         unit.update_logs();
+       
     }
 
     float integrate_I_net(Unit unit, float g_i, float dt_integ, boolean ratecoded, int steps){
