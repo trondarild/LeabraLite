@@ -59,7 +59,7 @@ class ChoiceModule implements NetworkModule {
         choice_layer = new Layer(choicesize, new LayerSpec(true), excite_unit_spec, HIDDEN, "Choice (out)");
 
         // accumlator
-        acc = new ValueAccumulatorModule(this.name + "_valueacc");
+        acc = new ValueAccumulatorModule("Value accumulator");
 
         // connections
         oto_spec.proj = "1to1";
@@ -134,7 +134,7 @@ class ChoiceModule implements NetworkModule {
         pushStyle();
         fill(60);
         stroke(100);
-        rect(0, 0, 260, 240, 10);
+        rect(0, 0, 360, 300, 10);
         popStyle();
 
         // add name
@@ -143,7 +143,7 @@ class ChoiceModule implements NetworkModule {
         //translate(0, 20);
         acc.draw();
 
-        translate(0,160);
+        translate(0,230);
         drawStrip(choice_layer.output(), choice_layer.name());
         popMatrix();
 

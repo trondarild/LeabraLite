@@ -148,7 +148,7 @@ class ValueAccumulatorModule implements NetworkModule {
         pushStyle();
         fill(60);
         stroke(100);
-        rect(0, 0, 220, 160, 10);
+        rect(0, 0, 320, 220, 10);
         popStyle();
 
         // add name
@@ -160,9 +160,11 @@ class ValueAccumulatorModule implements NetworkModule {
         drawStrip(spatix_in_layer.output(), spatix_in_layer.name());
         drawStrip(inh_layer.output(), inh_layer.name());
         //drawStrip(disinh_layer.output(), disinh_layer.name());
-        drawStrip(acc_out_layer.output(), acc_out_layer.name());
+        //drawStrip(acc_out_layer.output(), acc_out_layer.name());
         drawStrip(ravel(val_acc_conn.weights()), "Value->Acc W");
         drawStrip(ravel(val_inh_conn.weights()), "Value->Inh W");
+        translate(0, -30);
+        drawBarChart(acc_out_layer.output(), "Accum (out)");
         
         popMatrix();
     }
