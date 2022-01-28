@@ -2,9 +2,9 @@ class DecisionModule implements NetworkModule {
     /** This module has a value accumulator part
         built on that described in Balkenius et al 2020
     */
-    static final int VALUE = 0;
-    static final int SPATIAL_IX = 1;
-    static final int CHOICE = 2;
+    static final String VALUE = "value";
+    static final String SPATIAL_IX = "spatial_ix";
+    static final String CHOICE = "choice";
 
     String name = "DecisionModule";
     Layer[] layers = new Layer[3];
@@ -66,7 +66,7 @@ class DecisionModule implements NetworkModule {
     String name(){return name;}
     Layer[] layers() {return layers;}
     Connection[] connections() {return connections;}
-    Layer layer(int code) {
+    Layer layer(String code) {
         switch(code) {
             case VALUE:
                 return value_layer;
