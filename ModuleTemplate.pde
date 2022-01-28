@@ -69,8 +69,10 @@ class ModuleTemplate implements NetworkModule {
             case IN:
                 return in_layer; // input
             case OUT:
-            default:
                 return out_layer; // output
+            default:
+                assert(false): "No layer named '" + l + "' defined, check spelling.";
+                return null;
         }
     }
 
