@@ -1,5 +1,6 @@
 class TestEffortAchDecisionModules {
     String modelname = "Test effortful context switch with ACh and decisionmaking";
+    String description = "Fader 1-3; ctx; Btn 1-2: pos; Btn 3: rew";
 
     int ctx_inp_sz = 3; // ctx:3 reward:1 pos:2 color:4 number:10
     int pos_inp_sz = 2;
@@ -47,7 +48,7 @@ class TestEffortAchDecisionModules {
 
     // modules
     EffortModule effort_mod = new EffortModule(gainsize, "Effort");
-    DecisionModule dec_mod = new DecisionModule("Decision");
+    ChoiceModule dec_mod = new ChoiceModule("Choice");
     ValenceLearningModule val_mod = new ValenceLearningModule(2, "Valence learning");
     
     int quart_num = 25;
@@ -190,6 +191,8 @@ class TestEffortAchDecisionModules {
         pushMatrix();
         translate(10,20);
         text(modelname, 0, 0);
+        translate(0,20);
+        text(description, 0, 0);
         popMatrix();
 
         float[][] inp_viz = zeros(1,ctx_inp_sz);
@@ -220,7 +223,7 @@ class TestEffortAchDecisionModules {
             effort_mod.draw();
             translate(0, 100);
             val_mod.draw();
-            translate(0, 320);
+            translate(0, 340);
             dec_mod.draw();
 
             
