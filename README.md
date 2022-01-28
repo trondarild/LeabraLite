@@ -1,6 +1,8 @@
 # LeabraLite
 A processing port and modification of the Leabra neural modeling framework. Based on a python port of Leabra 8.0 (TODO add link)
-
+## Installation
+1. clone the repository, e.g. into your Processing sketchbook folder
+2. Open the LeabraLite.pde sketch in Processing
 ## Modifications
 1. Connection class is abstract, and is implemented by
     1. LayerConnection: standard connection between layers, but weights are also connectable using ConnectableWeight class 
