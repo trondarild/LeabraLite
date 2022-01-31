@@ -11,6 +11,9 @@ class ChoiceModule implements NetworkModule {
     Connection[] connections = new Connection[2];
     int valuesize = 1;
     int choicesize = 2;
+    int fill_col = 60;
+    int boundary_w = 360;
+    int boundary_h = 300;
 
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
@@ -132,15 +135,18 @@ class ChoiceModule implements NetworkModule {
         
         // draw a rounded rectangle around
         pushStyle();
-        fill(60);
-        stroke(100);
-        rect(0, 0, 360, 300, 10);
+        fill(fill_col);
+        stroke(fill_col + 20);
+        rect(0, 0, boundary_w, boundary_h, 10);
         popStyle();
 
         // add name
         translate(10, 20);
         text(this.name, 0,0);
         //translate(0, 20);
+        acc.boundary_w = this.boundary_w - 30;
+        acc.boundary_h = this.boundary_h - 100;
+        acc.fill_col = this.fill_col + 10;
         acc.draw();
 
         translate(0,230);
