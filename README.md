@@ -27,6 +27,10 @@ A processing port and modification of the Leabra neural modeling framework. Base
 3. ValenceLearningModule: increases weights of avoid or approach pathways for a set of properties based on positive and negative valence
 4. BasalGangliaModule: simple BG module which control "gas", "break" for behaviours. Currently has only on/off behaviours, not graded responses
 5. RuleModule: input-output mapping with definable weights which can be used to model rules for experimental tasks; use DendriteConnection to turn on and off rules
+### Templates
+* TestTemplate.pde: template for testing networks
+* ModuleTemplate.pde: template for modules
+* TestModuleTemplate.pde: template for testing modules
 ## Links to original Leabra resources
 TODO
 
