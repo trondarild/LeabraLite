@@ -1,5 +1,6 @@
 class TestTemplate {
     String modelname = "Test template";
+    String description = "";
 
     int inputvecsize = 3; // ctx:3 reward:1 pos:2 color:4 number:10
     int hiddensize = 3; // TODO update when calc number of discrete behaviours, including gating ones
@@ -79,6 +80,8 @@ class TestTemplate {
         pushMatrix();
         translate(10,20);
         text(modelname, 0, 0);
+        translate(0,20);
+        text(description, 0, 0);
         popMatrix();
 
         float[][] inp_viz = zeros(1,inputvecsize);
