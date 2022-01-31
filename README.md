@@ -26,6 +26,7 @@ A processing port and modification of the Leabra neural modeling framework. Base
 2. EffortModule: recruits a neural population based on a control signal, to be directed at a population in need of extra excitation
 3. ValenceLearningModule: increases weights of avoid or approach pathways for a set of properties based on positive and negative valence
 4. BasalGangliaModule: simple BG module which control "gas", "break" for behaviours. Currently has only on/off behaviours, not graded responses
+5. RuleModule: input-output mapping with definable weights which can be used to model rules for experimental tasks; use DendriteConnection to turn on and off rules
 ## Links to original Leabra resources
 TODO
 
