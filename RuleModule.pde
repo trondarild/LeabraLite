@@ -3,6 +3,10 @@ class RuleModule implements NetworkModule {
     static final String OUT = "out";
     
     String name = "RuleModule";
+
+    int boundary_w = 200;
+    int boundary_h = 200;
+    int fill_col = 60;
     
     Layer[] layers = new Layer[2];
     Connection[] connections; //
@@ -89,9 +93,9 @@ class RuleModule implements NetworkModule {
         
         // draw a rounded rectangle around
         pushStyle();
-        fill(60);
-        stroke(100);
-        rect(0, 0, 270, 220, 10);
+        fill(fill_col);
+        stroke(fill_col + 20);
+        rect(0, 0, boundary_w, boundary_h, 10);
         popStyle();
 
         // add name

@@ -7,6 +7,9 @@ class EffortModule implements NetworkModule {
     String name = "EffortModule";
     int gainsize = 2;
     int magnitudesize = 1;
+    int fill_col = 60;
+    int boundary_w = 220;
+    int boundary_h = 100;
 
     Layer[] layers = new Layer[3];
     Connection[] connections = new Connection[1];
@@ -86,9 +89,10 @@ class EffortModule implements NetworkModule {
         
         // draw a rounded rectangle around
         pushStyle();
-        fill(60);
-        stroke(100);
-        rect(0, 0, 220, 100, 10);
+        fill(fill_col);
+        stroke(fill_col + 20);
+        //rect(0, 0, 220, 100, 10);
+        rect(0, 0, boundary_w, boundary_h, 10);
         popStyle();
 
         // add name
