@@ -1,5 +1,9 @@
 class EffortRegulationModel implements NetworkModule {
     /** 
+        * 2022-02-01:
+            * Next:
+                * connections from input to task rules 
+                * dendrite connection from task ctx to conn from number to dec demand and shp-col-num to wisconsin
         * 2022-01-31: 
             * For now implement as module; later incorporate 
                 network too, so can be placed in context with 
