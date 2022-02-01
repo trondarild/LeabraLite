@@ -16,8 +16,8 @@ class EffortRegulationModel implements NetworkModule {
     String name = "EffortRegulationModel";
     
     Layer[] layers;
-    Connection[] connections = new Connection[1];
-    int inputvecsize = 23; // taskctx:3 tempctx:2 pos:2 shape: 4 color:4 number:10 valence:2; total 23
+    Connection[] connections; // = new Connection[1];
+    int inputvecsize = 27; // taskctx:3 tempctx:2 pos:2 shape: 4 color:4 number:10 valence:2; total 23
     int outputsize = 4;
     int effortsize = 5;
     int task_ctx_size = 3;
@@ -103,7 +103,18 @@ class EffortRegulationModel implements NetworkModule {
 
     // connections
     ConnectionSpec full_spec = new ConnectionSpec();
+    ConnectionSpec oto_spec;
     LayerConnection in_out_conn; // population to gain
+
+    LayerConnection inp_task_ctx_conn; // divide up input vec
+    LayerConnection inp_temp_ctx_conn;
+    LayerConnection inp_position_conn;
+    LayerConnection inp_shape_conn;
+    LayerConnection inp_color_conn;
+    LayerConnection inp_number_conn;
+    LayerConnection inp_valence_conn;
+    
+
     
 
     EffortRegulationModel() {
@@ -134,6 +145,9 @@ class EffortRegulationModel implements NetworkModule {
         full_spec.rnd_mean=0.5;
         full_spec.rnd_var=0.0;
 
+        oto_spec = new ConnectionSpec(full_spec);
+        oto_spec.proj = "1to1";
+
         // modules
         ArrayList<float[][]> rulelist = new ArrayList<float[][]>();
         rulelist.add(transpose(oddevenrule));
@@ -160,17 +174,19 @@ class EffortRegulationModel implements NetworkModule {
         out_layer = new Layer(outputsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (target pos)");
         task_ctx_layer = new Layer(task_ctx_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Task_ctx");
         temp_ctx_layer = new Layer(temp_ctx_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Temp_ctx");
+        position_layer = new Layer(position_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Position");
         shape_layer = new Layer(shape_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Shape");
         color_layer = new Layer(color_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Color");
         number_layer = new Layer(number_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Number");
         valence_layer = new Layer(valence_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Valence");
         
-        layers = new Layer[8];
+        layers = new Layer[9];
         int ix = 0;
         layers[ix++] = in_layer;
         layers[ix++] = out_layer;
         layers[ix++] = task_ctx_layer;
         layers[ix++] = temp_ctx_layer;
+        layers[ix++] = position_layer;
         layers[ix++] = shape_layer;
         layers[ix++] = color_layer;
         layers[ix++] = number_layer;
@@ -179,7 +195,65 @@ class EffortRegulationModel implements NetworkModule {
         assert(ix == layers.length) : "ix: " + ix + " layers.length: " + layers.length;
 
         in_out_conn = new LayerConnection(in_layer, out_layer, full_spec);
-        connections[0] = in_out_conn;
+
+        ConnectionSpec[] tmpspec = new ConnectionSpec[7];
+        ix = 0;
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 0;
+        tmpspec[ix].pre_endix = 2;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 2;
+        inp_task_ctx_conn = new LayerConnection(in_layer, task_ctx_layer, tmpspec[ix++]);
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 3;
+        tmpspec[ix].pre_endix = 4;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 1;
+        inp_temp_ctx_conn = new LayerConnection(in_layer, temp_ctx_layer, tmpspec[ix++]);
+        
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 5;
+        tmpspec[ix].pre_endix = 6;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 1;
+        inp_position_conn = new LayerConnection(in_layer, position_layer, tmpspec[ix++]);
+        
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 7;
+        tmpspec[ix].pre_endix = 10;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 3;
+        inp_shape_conn = new LayerConnection(in_layer, shape_layer, tmpspec[ix++]);
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 11;
+        tmpspec[ix].pre_endix = 14;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 3;
+        inp_color_conn = new LayerConnection(in_layer, color_layer, tmpspec[ix++]);
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 15;
+        tmpspec[ix].pre_endix = 24;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 9;
+        inp_number_conn = new LayerConnection(in_layer, number_layer, tmpspec[ix++]);
+        tmpspec[ix] = new ConnectionSpec(oto_spec);
+        tmpspec[ix].pre_startix = 25;
+        tmpspec[ix].pre_endix = 26;
+        tmpspec[ix].post_startix = 0;
+        tmpspec[ix].post_endix = 1;
+        inp_valence_conn = new LayerConnection(in_layer, valence_layer, tmpspec[ix++]);
+        
+        ix = 0;
+        connections = new Connection[8];
+        connections[ix++] = in_out_conn;
+        connections[ix++] = inp_task_ctx_conn;
+        connections[ix++] = inp_temp_ctx_conn;
+        connections[ix++] = inp_position_conn;
+        connections[ix++] = inp_shape_conn;
+        connections[ix++] = inp_color_conn;
+        connections[ix++] = inp_number_conn;
+        connections[ix++] = inp_valence_conn;
+
         
     }
     String name() {return name;}
@@ -197,27 +271,6 @@ class EffortRegulationModel implements NetworkModule {
         Layer[] retval = new Layer[ale.size()];
         ale.toArray(retval);
         return retval;
-
-        /*
-        Layer[] decdemandlayers = dec_dmnd_rule_mod.layers();
-        Layer[] wisconsinlayers = wisconsin_rule_mod.layers();
-        Layer[] stoplayers = stop_task_rule_mod.layers();
-        Layer[] retval = new Layer[
-            layers.length 
-            + decdemandlayers.length
-            + wisconsinlayers.length
-            + stoplayers.length];
-        int ctr = 0;
-        for (Layer o : decdemandlayers) 
-            retval[ctr++] = o;
-        for (Layer o : wisconsinlayers) 
-            retval[ctr++] = o;
-        for (Layer o : stoplayers) 
-            retval[ctr++] = o;
-        for (Layer o : layers) 
-            retval[ctr++] = o;
-        return retval;
-        */
     }
 
     Connection[] connections() {
@@ -233,28 +286,8 @@ class EffortRegulationModel implements NetworkModule {
         Connection[] retval = new Connection[ale.size()];
         ale.toArray(retval);
         return retval;
-        /*
-        Connection[] decdemandconns = dec_dmnd_rule_mod.connections();
-        Connection[] wisconsinconns = wisconsin_rule_mod.connections();
-        Connection[] stopconns = stop_task_rule_mod.connections();
-        Connection[] retval = new Connection[
-            connections.length 
-            + decdemandconns.length
-            + wisconsinconns.length
-            + stopconns.length];
-        int ctr = 0;
-        for (Connection o : decdemandconns) 
-            retval[ctr++] = o;
-        for (Connection o : wisconsinconns) 
-            retval[ctr++] = o;
-        for (Connection o : stopconns) 
-            retval[ctr++] = o;
-        for (Connection o : connections) 
-            retval[ctr++] = o;
-        
-        return retval;
-        */
     }
+    
     Layer layer(String l) {
         switch(l) {
             case IN:
@@ -291,10 +324,12 @@ class EffortRegulationModel implements NetworkModule {
         translate(0,20);
 
         pushMatrix();
-        scale(0.85);
+        scale(0.75);
         drawStrip(task_ctx_layer.output(), task_ctx_layer.name);
         translate(150, -20);
         drawStrip(temp_ctx_layer.output(), temp_ctx_layer.name);
+        translate(150, -20);
+        drawStrip(position_layer.output(), position_layer.name);
         translate(150, -20);
         drawStrip(shape_layer.output(), shape_layer.name);
         translate(170, -20);
