@@ -15,6 +15,10 @@ class ValenceLearningModule implements NetworkModule {
     Layer[] layers = new Layer[5];
     Connection[] connections = new Connection[4];
 
+    int boundary_w = 320; 
+    int boundary_h = 340;
+    int fill_col = 60;
+
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
 
@@ -127,9 +131,9 @@ class ValenceLearningModule implements NetworkModule {
         
         // draw a rounded rectangle around
         pushStyle();
-        fill(60);
-        stroke(100);
-        rect(0, 0, 320, 340, 10);
+        fill(fill_col);
+        stroke(fill_col + 20);
+        rect(0, 0, boundary_w, boundary_h, 10);
         popStyle();
 
         // add name

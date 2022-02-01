@@ -7,6 +7,10 @@ class BasalGangliaModule implements NetworkModule {
     static final String SNC = "snc"; // subst nigra pars compacta
     
     String name = "BasalGangliaModule";
+
+    int boundary_w = 220;
+    int boundary_h = 160;
+    int fill_col = 60;
     
     Layer[] layers = new Layer[6];
     Connection[] connections = new Connection[4];
@@ -45,7 +49,7 @@ class BasalGangliaModule implements NetworkModule {
         this.init();
     }
 
-    BasalGangliaModule(String name, int size) {
+    BasalGangliaModule(int size, String name) {
         this.layersize = size;
         this.name = name;
         this.init();
@@ -143,9 +147,9 @@ class BasalGangliaModule implements NetworkModule {
         
         // draw a rounded rectangle around
         pushStyle();
-        fill(60);
-        stroke(100);
-        rect(0, 0, 220, 160, 10);
+        fill(fill_col);
+        stroke(fill_col + 10);
+        rect(0, 0, boundary_w, boundary_h, 10);
         popStyle();
 
         // add name
