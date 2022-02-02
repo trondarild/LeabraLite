@@ -295,9 +295,9 @@ class LayerConnection extends Connection implements ConnectableComposite {
         pre.add_from_connections(this);
         post.add_to_connections(this);
         
-        
-        this.spec.projection_init(this);
         this.name = pre.name + " -> " + post.name;
+        this.spec.projection_init(this);
+        
         
         units = new ConnectableWeight[this.links.size()];
         for (int i = 0; i < units.length; ++i) {
