@@ -20,7 +20,8 @@ class EffortRegulationModel implements NetworkModule {
     String name = "EffortRegulationModel";
     
     Layer[] layers;
-    Connection[] connections; // = new Connection[1];
+    // Connection[] connections; // = new Connection[1];
+    ArrayListExt<Connection> connections;
     int inputvecsize = 27; // taskctx:3 tempctx:2 pos:2 shape: 4 color:4 number:10 valence:2; total 23
     int outputsize = 4;
     int effortsize = 5;
@@ -110,14 +111,19 @@ class EffortRegulationModel implements NetworkModule {
     ConnectionSpec oto_spec;
     LayerConnection in_out_conn; // population to gain
 
-    LayerConnection inp_task_ctx_conn; // divide up input vec
+    LayerConnection inp_task_ctx_conn; // divide up input vec so see what simulation is
     LayerConnection inp_temp_ctx_conn;
     LayerConnection inp_position_conn;
     LayerConnection inp_shape_conn;
     LayerConnection inp_color_conn;
     LayerConnection inp_number_conn;
     LayerConnection inp_valence_conn;
-    
+
+    LayerConnection inp_decdem_rule_conn; // connections to specific rule modules
+    LayerConnection inp_wisc_rule_conn;
+    LayerConnection inp_stop_rule_conn;
+
+    // DendriteConnection task_ctx_
 
     
 
@@ -246,17 +252,42 @@ class EffortRegulationModel implements NetworkModule {
         tmpspec[ix].post_startix = 0;
         tmpspec[ix].post_endix = 1;
         inp_valence_conn = new LayerConnection(in_layer, valence_layer, tmpspec[ix++]);
+
+        ConnectionSpec decdem_spec = new ConnectionSpec(oto_spec);
+        decdem_spec.pre_startix = 15;
+        decdem_spec.pre_endix = 24;
+        decdem_spec.post_startix = 0;
+        decdem_spec.post_endix = 9;
+        inp_decdem_rule_conn = new LayerConnection(in_layer, dec_dmnd_rule_mod.layer("in"), decdem_spec);
+
+        ConnectionSpec wisc_spec = new ConnectionSpec(oto_spec);
+        wisc_spec.pre_startix = 7;
+        wisc_spec.pre_endix = 18;
+        wisc_spec.post_startix = 0;
+        wisc_spec.post_endix = 11;
+        inp_wisc_rule_conn = new LayerConnection(in_layer, wisconsin_rule_mod.layer("in"), wisc_spec);
+
+        ConnectionSpec stop_spec = new ConnectionSpec(oto_spec);
+        stop_spec.pre_startix = 11;
+        stop_spec.pre_endix = 12;
+        stop_spec.post_startix = 0;
+        stop_spec.post_endix = 1;
+        inp_stop_rule_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("in"), stop_spec);
         
         ix = 0;
-        connections = new Connection[8];
-        connections[ix++] = in_out_conn;
-        connections[ix++] = inp_task_ctx_conn;
-        connections[ix++] = inp_temp_ctx_conn;
-        connections[ix++] = inp_position_conn;
-        connections[ix++] = inp_shape_conn;
-        connections[ix++] = inp_color_conn;
-        connections[ix++] = inp_number_conn;
-        connections[ix++] = inp_valence_conn;
+        // connections = new Connection[8];
+        connections = new ArrayListExt<Connection>();
+        connections.add(in_out_conn);
+        connections.add(inp_task_ctx_conn);
+        connections.add(inp_temp_ctx_conn);
+        connections.add(inp_position_conn);
+        connections.add(inp_shape_conn);
+        connections.add(inp_color_conn);
+        connections.add(inp_number_conn);
+        connections.add(inp_valence_conn);
+        connections.add(inp_decdem_rule_conn);
+        connections.add(inp_wisc_rule_conn);
+        connections.add(inp_stop_rule_conn);
 
         
     }
