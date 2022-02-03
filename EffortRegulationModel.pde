@@ -1,9 +1,13 @@
 class EffortRegulationModel implements NetworkModule {
     /** 
+        * 2022-02-03:
+            * Next;
+                * Disinhibition of specific rules based on context(dec demand) or reward (wisconsin)
+                * Effort-changeable context population
         * 2022-02-01:
             * Next:
-                * connections from input to task rules 
-                * dendrite connection from task ctx to conn from number to dec demand and shp-col-num to wisconsin
+                * connections from input to task rules - ok
+                * dendrite connection from task ctx to conn from number to dec demand and shp-col-num to wisconsin - ok
         * 2022-01-31: 
             * For now implement as module; later incorporate 
                 network too, so can be placed in context with 
@@ -303,9 +307,11 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(inp_color_conn);
         connections.add(inp_number_conn);
         connections.add(inp_valence_conn);
+        
         connections.add(inp_decdem_rule_conn);
         connections.add(inp_wisc_rule_conn);
         connections.add(inp_stop_rule_conn);
+
         connections.add(task_ctx_decdem_conn);
         connections.add(task_ctx_wisc_conn);
         connections.add(task_ctx_stop_conn);
