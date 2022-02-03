@@ -123,6 +123,10 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection inp_wisc_rule_conn;
     LayerConnection inp_stop_rule_conn;
 
+    LayerConnection task_ctx_decdem_conn; // connections to disinh all rules in rule modules
+    LayerConnection task_ctx_wisc_conn;
+    LayerConnection task_ctx_stop_conn;
+
     // DendriteConnection task_ctx_
 
     
@@ -273,6 +277,20 @@ class EffortRegulationModel implements NetworkModule {
         stop_spec.post_startix = 0;
         stop_spec.post_endix = 1;
         inp_stop_rule_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("in"), stop_spec);
+
+        ConnectionSpec rule_selection_spec = new ConnectionSpec(full_spec);
+        rule_selection_spec.type = GABA;
+        rule_selection_spec.pre_startix = 0;
+        rule_selection_spec.pre_endix = 0;
+        task_ctx_decdem_conn = new LayerConnection(in_layer, dec_dmnd_rule_mod.layer("inhibition"), rule_selection_spec);
+        rule_selection_spec = new ConnectionSpec(rule_selection_spec);
+        rule_selection_spec.pre_startix = 1;
+        rule_selection_spec.pre_endix = 1;
+        task_ctx_wisc_conn = new LayerConnection(in_layer, wisconsin_rule_mod.layer("inhibition"), rule_selection_spec);
+        rule_selection_spec = new ConnectionSpec(rule_selection_spec);
+        rule_selection_spec.pre_startix = 2;
+        rule_selection_spec.pre_endix = 2;
+        task_ctx_stop_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("inhibition"), rule_selection_spec);
         
         ix = 0;
         // connections = new Connection[8];
@@ -288,6 +306,9 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(inp_decdem_rule_conn);
         connections.add(inp_wisc_rule_conn);
         connections.add(inp_stop_rule_conn);
+        connections.add(task_ctx_decdem_conn);
+        connections.add(task_ctx_wisc_conn);
+        connections.add(task_ctx_stop_conn);
 
         
     }
