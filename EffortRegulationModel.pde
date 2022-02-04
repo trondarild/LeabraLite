@@ -1,5 +1,7 @@
 class EffortRegulationModel implements NetworkModule {
     /** 
+        * 2022-02-04:
+            * add re-assignable context module that mediates disinh of active rule for active task
         * 2022-02-03:
             * Next;
                 * Disinhibition of specific rules based on context(dec demand) or reward (wisconsin)
@@ -90,6 +92,7 @@ class EffortRegulationModel implements NetworkModule {
     ChoiceModule target_choice_mod;
     ChoiceModule beh_choice_mod; // check if can be used
     BasalGangliaModule bg_mod; 
+    ModeModule rule_ctx_mod;
 
     // Reservoirs
     // Reservoir effort_adeno_res;
@@ -131,6 +134,7 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection task_ctx_wisc_conn;
     LayerConnection task_ctx_stop_conn;
 
+    
     // DendriteConnection task_ctx_
 
     
