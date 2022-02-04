@@ -9,11 +9,12 @@ class ValenceLearningModule implements NetworkModule {
     static final String PROPERTY = "property";
     static final String AVOIDANCE = "avoidance";
     static final String APPROACH = "approach";
+    static final String SUM = "sum";
 
     String name = "Valence learning module";
     int popsize = 1; // size of populations representing positive and negative valence
-    Layer[] layers = new Layer[5];
-    Connection[] connections = new Connection[4];
+    Layer[] layers = new Layer[6];
+    Connection[] connections = new Connection[6];
 
     int boundary_w = 320; 
     int boundary_h = 340;
@@ -26,16 +27,19 @@ class ValenceLearningModule implements NetworkModule {
     Layer neg_lr_layer; // choline-like, modulates learning rate on neg. valence
     Layer pos_lr_layer; // dopa-like, modulates learning rate on pos. valence
     Layer property_layer; // input interface; projects to valence layers; proj. susc. to learning rate mod
-    Layer avoidance_layer; // learns negative valence
-    Layer approach_layer; // learns positive valence
+    Layer avoidance_layer; // learns negative valence -> motivate avoidance beh
+    Layer approach_layer; // learns positive valence -> motivate approach
+    Layer sum_layer; // sums up valence for convenience
 
     // connections
-    ConnectionSpec oto_spec = new ConnectionSpec(); //  
+    ConnectionSpec oto_learn_spec = new ConnectionSpec(); //  
     ConnectionSpec choline_spec = new ConnectionSpec(); 
     LayerConnection property_avoidance_conn;
     LayerConnection property_approach_conn;
     DendriteConnection lr_avoidance_conn;
     DendriteConnection lr_approach_conn;
+    LayerConnection avoidance_sum_conn;
+    LayerConnection approach_sum_conn;
 
     ConnectableWeightSpec chol_w_spec = new ConnectableWeightSpec();
 
@@ -68,12 +72,20 @@ class ValenceLearningModule implements NetworkModule {
         choline_spec.rnd_var=0.0;
         choline_spec.type = ACETYLCHOLINE;
 
-        oto_spec.proj = "1to1";
-        oto_spec.rnd_type="uniform" ;
-        oto_spec.rnd_mean=0.05;
-        oto_spec.rnd_var=0.0;
-        oto_spec.lrule = "delta";
-        oto_spec.lrate = .1;
+        oto_learn_spec.proj = "1to1";
+        oto_learn_spec.rnd_type="uniform" ;
+        oto_learn_spec.rnd_mean=0.05;
+        oto_learn_spec.rnd_var=0.0;
+        oto_learn_spec.lrule = "delta";
+        oto_learn_spec.lrate = .1;
+
+        ConnectionSpec oto_exc_spec = new ConnectionSpec(oto_learn_spec);
+        oto_exc_spec.lrule = "";
+        oto_exc_spec.type = GLUTAMATE;
+
+        ConnectionSpec oto_inh_spec = new ConnectionSpec(oto_learn_spec);
+        
+        oto_inh_spec.type = GABA;
 
         chol_w_spec.receptors.append("M1"); // add M1 receptor support to modulate learning rate
 
@@ -83,12 +95,14 @@ class ValenceLearningModule implements NetworkModule {
         property_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Properties (in)");
         avoidance_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, OUTPUT, "Neg val (out)");
         approach_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, OUTPUT, "Pos val (out)");
-
+        sum_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Sum (out)");
         // connections
-        property_avoidance_conn = new LayerConnection(property_layer, avoidance_layer, oto_spec, chol_w_spec);
-        property_approach_conn = new LayerConnection(property_layer, approach_layer, oto_spec, chol_w_spec);
+        property_avoidance_conn = new LayerConnection(property_layer, avoidance_layer, oto_learn_spec, chol_w_spec);
+        property_approach_conn = new LayerConnection(property_layer, approach_layer, oto_learn_spec, chol_w_spec);
         lr_avoidance_conn = new DendriteConnection(neg_lr_layer, property_avoidance_conn, choline_spec);
         lr_approach_conn = new DendriteConnection(pos_lr_layer, property_approach_conn, choline_spec);
+        avoidance_sum_conn = new LayerConnection(avoidance_layer, sum_layer, oto_inh_spec);
+        approach_sum_conn = new LayerConnection(approach_layer, sum_layer, oto_exc_spec);
 
         int ix = 0;
         layers[ix++] = neg_lr_layer;
@@ -96,11 +110,14 @@ class ValenceLearningModule implements NetworkModule {
         layers[ix++] = property_layer;
         layers[ix++] = avoidance_layer;
         layers[ix++] = approach_layer;
+        layers[ix++] = sum_layer;
         ix =0;
         connections[ix++] = property_avoidance_conn;
         connections[ix++] = property_approach_conn;
         connections[ix++] = lr_avoidance_conn;
         connections[ix++] = lr_approach_conn;
+        connections[ix++] = avoidance_sum_conn;
+        connections[ix++] = approach_sum_conn;
 
 
     }
@@ -119,8 +136,12 @@ class ValenceLearningModule implements NetworkModule {
             case AVOIDANCE:
                 return avoidance_layer;
             case APPROACH:
-            default:
                 return approach_layer;
+            case SUM:
+                return sum_layer;
+            default:
+                assert(false): "No layer named '" + code + "' defined, check spelling.";
+                return null;
         }
     }
     void cycle() {}
@@ -146,7 +167,9 @@ class ValenceLearningModule implements NetworkModule {
         drawStrip(property_layer.output(), property_layer.name());
         drawStrip(avoidance_layer.output(), avoidance_layer.name());
         drawStrip(approach_layer.output(), approach_layer.name());
+        drawStrip(sum_layer.output(), sum_layer.name());
         // draw weights for inspection
+        translate(0, -10);
         drawBarChart(ravel(property_avoidance_conn.weights()), "Avoidance w");
         drawBarChart(ravel(property_approach_conn.weights()), "Approach w");
         popMatrix();
