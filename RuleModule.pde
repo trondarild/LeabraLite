@@ -48,6 +48,12 @@ class RuleModule implements NetworkModule {
         excite_unit_spec.g_bar_l=0.1;
         excite_unit_spec.g_bar_i=0.40;
 
+<<<<<<< Updated upstream
+=======
+        UnitSpec auto_spec = new UnitSpec(excite_unit_spec);
+        auto_spec.bias = 0.1;
+
+>>>>>>> Stashed changes
         // connection spec
         full_spec.proj="full";
         full_spec.rnd_type="uniform" ;
