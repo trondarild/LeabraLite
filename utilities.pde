@@ -1187,4 +1187,8 @@ class ArrayListExt<T> extends ArrayList {
   void add(T[] a) {
     for(T o: a) this.add(o);
   }
+
+  void add(ArrayListExt<T> a) {
+    for(Object o: a) this.add(o);
+  }
 }
