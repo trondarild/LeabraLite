@@ -52,6 +52,7 @@ class RuleModule implements NetworkModule {
         excite_unit_spec.g_bar_l=0.1;
         excite_unit_spec.g_bar_i=0.40;
 
+
         UnitSpec auto_spec = new UnitSpec(excite_unit_spec);
         auto_spec.bias = 0.1;
 
