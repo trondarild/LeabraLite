@@ -54,7 +54,7 @@ class RuleModule implements NetworkModule {
 
 
         UnitSpec auto_spec = new UnitSpec(excite_unit_spec);
-        auto_spec.bias = 0.3;
+        auto_spec.bias = 0.1;
 
         // connection spec
         full_spec.proj="full";
