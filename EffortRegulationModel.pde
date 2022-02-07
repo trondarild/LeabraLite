@@ -38,6 +38,7 @@ class EffortRegulationModel implements NetworkModule {
     int color_size = 4;
     int number_size = 10;
     int valence_size = 2;
+    int rulectx_size = 3; // handle max rules per task ctx
 
     int fill_col = 60;
     int boundary_w = 900; 
@@ -92,7 +93,7 @@ class EffortRegulationModel implements NetworkModule {
     ChoiceModule target_choice_mod;
     ChoiceModule beh_choice_mod; // check if can be used
     BasalGangliaModule bg_mod; 
-    ModeModule rule_ctx_mod;
+    ModeModule rule_ctx_mod; // active rule for each task
 
     // Reservoirs
     // Reservoir effort_adeno_res;
@@ -133,6 +134,8 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection task_ctx_decdem_conn; // connections to disinh all rules in rule modules
     LayerConnection task_ctx_wisc_conn;
     LayerConnection task_ctx_stop_conn;
+
+    LayerConnection effort_rule_ctx_conn; // effortful change of rules
 
     
     // DendriteConnection task_ctx_
@@ -190,6 +193,7 @@ class EffortRegulationModel implements NetworkModule {
         target_choice_mod = new ChoiceModule("Target choice (ofc)");
         val_learning_mod = new ValenceLearningModule(position_size, "Valence learning (acc)");
         bg_mod = new BasalGangliaModule(3, "Motivation (bg)");
+        rule_ctx_mod = new ModeModule(3, "Rule context (pfc)");
 
         // layers
         in_layer = new Layer(inputvecsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (occipital ctx)");
@@ -299,6 +303,10 @@ class EffortRegulationModel implements NetworkModule {
         rule_selection_spec.pre_startix = 2;
         rule_selection_spec.pre_endix = 2;
         task_ctx_stop_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("inhibition"), rule_selection_spec);
+
+        float[][] rulectx_weights = tileCols(effortsize, id(rulectx_size));
+        effort_rule_ctx_conn = new LayerConnection(effort_mod.layer("gain"), rule_ctx_mod.layer("mode"), full_spec);
+        // effort_rule_ctx_conn.weights(rulectx_weights);
         
         ix = 0;
         // connections = new Connection[8];
@@ -320,6 +328,8 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(task_ctx_wisc_conn);
         connections.add(task_ctx_stop_conn);
 
+        connections.add(effort_rule_ctx_conn);
+
         
     }
     String name() {return name;}
@@ -333,6 +343,7 @@ class EffortRegulationModel implements NetworkModule {
         ale.add(target_choice_mod.layers());
         ale.add(val_learning_mod.layers());
         ale.add(bg_mod.layers());
+        ale.add(rule_ctx_mod.layers());
         ale.add(layers);
         Layer[] retval = new Layer[ale.size()];
         ale.toArray(retval);
@@ -348,6 +359,7 @@ class EffortRegulationModel implements NetworkModule {
         ale.add(target_choice_mod.connections());
         ale.add(val_learning_mod.connections());
         ale.add(bg_mod.connections());
+        ale.add(rule_ctx_mod.connections());
         ale.add(connections);
         Connection[] retval = new Connection[ale.size()];
         ale.toArray(retval);
@@ -425,7 +437,13 @@ class EffortRegulationModel implements NetworkModule {
         stop_task_rule_mod.draw();
         popMatrix();
 
+        
         translate(0,270);
+        pushMatrix();
+        rule_ctx_mod.fill_col = this.fill_col + 10;
+        rule_ctx_mod.draw();
+        popMatrix();
+
         pushMatrix();
         translate(290, 0);
         val_learning_mod.fill_col = this.fill_col + 10;
