@@ -339,6 +339,7 @@ class EffortRegulationModel implements NetworkModule {
         color_spec.post_startix = 0;
         color_spec.pre_endix = 1;
         color_spec.post_endix = 1;
+        color_spec.rnd_mean = 0.225;
         //color_spec.rnd_var = 0;
         color_prederror_conn = new LayerConnection(color_layer, rulectx_prederror_layer, color_spec);
         // dendr inh population
@@ -372,6 +373,9 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(task_ctx_wisc_conn);
         connections.add(task_ctx_stop_conn);
 
+        connections.add(negvalence_rulectxprederror_conn);
+
+        connections.add(rulectx_prederror_conn);
         connections.add(effort_rule_ctx_conn);
         connections.add(prederror_effortmagn);
         connections.add(color_prederror_conn);
