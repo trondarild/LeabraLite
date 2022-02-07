@@ -144,7 +144,7 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection prederror_effortmagn; // drives magnitude of effort
     LayerConnection color_prederror_conn; // dec demand task
     LayerConnection prederror_ruledisnh_conn; // population for disinhibiting rules
-    // DendriteConnection task_ctx_
+    DendriteConnection disinh_rulectx_conn;
 
     
 
@@ -329,6 +329,7 @@ class EffortRegulationModel implements NetworkModule {
 
         ConnectionSpec oto_inh_spec = new ConnectionSpec(oto_spec);
         oto_inh_spec.type = GABA;
+        oto_inh_spec.rnd_mean = 0.7;
         rulectx_prederror_conn = new LayerConnection(rule_ctx_mod.layer("mode"), rulectx_prederror_layer, oto_inh_spec);
         prederror_effortmagn = new LayerConnection(rulectx_prederror_layer, effort_mod.layer("magnitude"), full_spec);
         // TODO: 
@@ -343,7 +344,10 @@ class EffortRegulationModel implements NetworkModule {
         // dendr inh population
         prederror_ruledisnh_conn = new LayerConnection(rulectx_prederror_layer, ruledisinh_layer, oto_inh_spec);
         // dendr connection to effort_rule_ctx_conn
-        // effort_rule_ctx_conn.weights(rulectx_weights);
+        ConnectionSpec full_inh_spec = new ConnectionSpec(full_spec);
+        full_inh_spec.type = GABA;
+        disinh_rulectx_conn = new DendriteConnection(ruledisinh_layer, effort_rule_ctx_conn, full_inh_spec);
+        disinh_rulectx_conn.weights(rulectx_weights);
         // inh conn from prederror to dendr inh population
         // dendriteconn from rule context to decdemand
         // dendriteconn from rule context to  wisconsin
@@ -372,6 +376,7 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(prederror_effortmagn);
         connections.add(color_prederror_conn);
         connections.add(prederror_ruledisnh_conn);
+        connections.add(disinh_rulectx_conn);
     
     }
 
