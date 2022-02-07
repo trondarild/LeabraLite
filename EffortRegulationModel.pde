@@ -25,7 +25,7 @@ class EffortRegulationModel implements NetworkModule {
     
     String name = "EffortRegulationModel";
     
-    Layer[] layers;
+    ArrayListExt<Layer> layers;
     // Connection[] connections; // = new Connection[1];
     ArrayListExt<Connection> connections;
     int inputvecsize = 27; // taskctx:3 tempctx:2 pos:2 shape: 4 color:4 number:10 valence:2; total 23
@@ -112,6 +112,8 @@ class EffortRegulationModel implements NetworkModule {
     Layer number_layer;
     Layer valence_layer;
     Layer out_layer;
+
+    Layer rulectx_prederror_layer; // used to drive effortful rule context
     
 
     // connections
@@ -136,7 +138,9 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection task_ctx_stop_conn;
 
     LayerConnection effort_rule_ctx_conn; // effortful change of rules
-
+    LayerConnection negvalence_rulectxprederror_conn; // negative valence excites prediction error, driving effort
+    LayerConnection rulectx_prederror_conn;
+    LayerConnection prederror_effortmagn; // drives magnitude of effort
     
     // DendriteConnection task_ctx_
 
@@ -193,7 +197,7 @@ class EffortRegulationModel implements NetworkModule {
         target_choice_mod = new ChoiceModule("Target choice (ofc)");
         val_learning_mod = new ValenceLearningModule(position_size, "Valence learning (acc)");
         bg_mod = new BasalGangliaModule(3, "Motivation (bg)");
-        rule_ctx_mod = new ModeModule(3, "Rule context (pfc)");
+        rule_ctx_mod = new ModeModule(rulectx_size, "Rule context (pfc)");
 
         // layers
         in_layer = new Layer(inputvecsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (occipital ctx)");
@@ -205,20 +209,23 @@ class EffortRegulationModel implements NetworkModule {
         color_layer = new Layer(color_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Color");
         number_layer = new Layer(number_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Number");
         valence_layer = new Layer(valence_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Valence");
+
+        rulectx_prederror_layer = new Layer(rulectx_size, new LayerSpec(true), excite_unit_spec, HIDDEN, "Rule pred error");
         
-        layers = new Layer[9];
+        layers = new ArrayListExt<Layer>(); //new Layer[9];
         int ix = 0;
-        layers[ix++] = in_layer;
-        layers[ix++] = out_layer;
-        layers[ix++] = task_ctx_layer;
-        layers[ix++] = temp_ctx_layer;
-        layers[ix++] = position_layer;
-        layers[ix++] = shape_layer;
-        layers[ix++] = color_layer;
-        layers[ix++] = number_layer;
-        layers[ix++] = valence_layer;
+        layers.add(in_layer);
+        layers.add(out_layer);
+        layers.add(task_ctx_layer);
+        layers.add(temp_ctx_layer);
+        layers.add(position_layer);
+        layers.add(shape_layer);
+        layers.add(color_layer);
+        layers.add(number_layer);
+        layers.add(valence_layer);
+        layers.add(rulectx_prederror_layer);
         
-        assert(ix == layers.length) : "ix: " + ix + " layers.length: " + layers.length;
+        // assert(ix == layers.length) : "ix: " + ix + " layers.length: " + layers.length;
 
         in_out_conn = new LayerConnection(in_layer, out_layer, full_spec);
 
@@ -306,7 +313,23 @@ class EffortRegulationModel implements NetworkModule {
 
         float[][] rulectx_weights = tileCols(effortsize, id(rulectx_size));
         effort_rule_ctx_conn = new LayerConnection(effort_mod.layer("gain"), rule_ctx_mod.layer("mode"), full_spec);
+        ConnectionSpec rulectx_spec = new ConnectionSpec();
+        rulectx_spec.proj = "full";
+        rulectx_spec.pre_startix = 1; // only use negative valence to drive prediction error
+        rulectx_spec.pre_endix = 1;
+        rulectx_spec.rnd_var= 0.1; // only a little variation to drive wta
+        negvalence_rulectxprederror_conn = new LayerConnection(valence_layer, rulectx_prederror_layer, rulectx_spec);
+
+        ConnectionSpec oto_inh_spec = new ConnectionSpec(oto_spec);
+        oto_inh_spec.type = GABA;
+        rulectx_prederror_conn = new LayerConnection(rule_ctx_mod.layer("mode"), rulectx_prederror_layer, oto_inh_spec);
+        prederror_effortmagn = new LayerConnection(rulectx_prederror_layer, effort_mod.layer("magnitude"), full_spec);
         // effort_rule_ctx_conn.weights(rulectx_weights);
+        // TODO: 
+        // color input[0,1] to rulectx_prederror
+        // dendr inh population
+        // dendr connection to effort_rule_ctx_conn
+        // inh conn from prederror to dendr inh population
         
         ix = 0;
         // connections = new Connection[8];
@@ -329,9 +352,10 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(task_ctx_stop_conn);
 
         connections.add(effort_rule_ctx_conn);
-
-        
+        connections.add(prederror_effortmagn);
+    
     }
+
     String name() {return name;}
     
     Layer[] layers() {
@@ -441,7 +465,10 @@ class EffortRegulationModel implements NetworkModule {
         translate(0,270);
         pushMatrix();
         rule_ctx_mod.fill_col = this.fill_col + 10;
+        rule_ctx_mod.boundary_w = 270;
         rule_ctx_mod.draw();
+        translate(0, 100);
+        drawStrip(rulectx_prederror_layer.output(), rulectx_prederror_layer.name());
         popMatrix();
 
         pushMatrix();
