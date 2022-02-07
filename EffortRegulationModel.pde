@@ -141,6 +141,7 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection negvalence_rulectxprederror_conn; // negative valence excites prediction error, driving effort
     LayerConnection rulectx_prederror_conn;
     LayerConnection prederror_effortmagn; // drives magnitude of effort
+    LayerConnection color_prederror_conn; // dec demand task
     
     // DendriteConnection task_ctx_
 
@@ -324,12 +325,21 @@ class EffortRegulationModel implements NetworkModule {
         oto_inh_spec.type = GABA;
         rulectx_prederror_conn = new LayerConnection(rule_ctx_mod.layer("mode"), rulectx_prederror_layer, oto_inh_spec);
         prederror_effortmagn = new LayerConnection(rulectx_prederror_layer, effort_mod.layer("magnitude"), full_spec);
-        // effort_rule_ctx_conn.weights(rulectx_weights);
         // TODO: 
         // color input[0,1] to rulectx_prederror
+        ConnectionSpec color_spec = new ConnectionSpec(oto_spec);
+        color_spec.pre_startix = 0;
+        color_spec.post_startix = 0;
+        color_spec.pre_endix = 1;
+        color_spec.post_endix = 1;
+        //color_spec.rnd_var = 0;
+        color_prederror_conn = new LayerConnection(color_layer, rulectx_prederror_layer, color_spec);
         // dendr inh population
         // dendr connection to effort_rule_ctx_conn
+        // effort_rule_ctx_conn.weights(rulectx_weights);
         // inh conn from prederror to dendr inh population
+        // dendriteconn from rule context to decdemand
+        // dendriteconn from rule context to  wisconsin
         
         ix = 0;
         // connections = new Connection[8];
@@ -353,6 +363,7 @@ class EffortRegulationModel implements NetworkModule {
 
         connections.add(effort_rule_ctx_conn);
         connections.add(prederror_effortmagn);
+        connections.add(color_prederror_conn);
     
     }
 
@@ -404,6 +415,7 @@ class EffortRegulationModel implements NetworkModule {
 
     void cycle() {   
         dec_dmnd_rule_mod.cycle();
+        effort_mod.cycle(); // drive pop coding
     }
 
     void draw() {
