@@ -116,7 +116,7 @@ class Network{
         // add layers and connections in module
         for(Layer l: mod.layers()) this.add_layer(l);
         for(Connection c: mod.connections()) {
-            assert(c != null) : mod.name();
+            assert(c != null) : mod.name() + ": got a null connection";
             this.add_connection(c);}
     }
 

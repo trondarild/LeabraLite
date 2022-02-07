@@ -18,6 +18,10 @@ class ValueAccumulatorModule implements NetworkModule {
     Layer[] layers = new Layer[4];
     Connection[] connections = new Connection[6];
     int layersize = 2;
+    
+    int boundary_w = 320;
+    int boundary_h = 220;
+    int fill_col = 60;
 
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
@@ -146,9 +150,9 @@ class ValueAccumulatorModule implements NetworkModule {
         
         // draw a rounded rectangle around
         pushStyle();
-        fill(60);
-        stroke(100);
-        rect(0, 0, 320, 220, 10);
+        fill(fill_col);
+        stroke(fill_col + 20);
+        rect(0, 0, boundary_w, boundary_h, 10);
         popStyle();
 
         // add name

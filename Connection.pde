@@ -213,6 +213,7 @@ abstract class Connection  {
             // for i, pre_u in enumerate(this.pre.units):
             //     for j, post_u in enumerate(this.post.units):
             //         W[i, j] = next(link_it).wt
+            
             int l = 0;
             for (int j = 0; j <= pre_end; ++j) { // sources
                 for (int i = 0; i <= post_end; ++i) { // targets
@@ -295,9 +296,9 @@ class LayerConnection extends Connection implements ConnectableComposite {
         pre.add_from_connections(this);
         post.add_to_connections(this);
         
-        
-        this.spec.projection_init(this);
         this.name = pre.name + " -> " + post.name;
+        this.spec.projection_init(this);
+        
         
         units = new ConnectableWeight[this.links.size()];
         for (int i = 0; i < units.length; ++i) {
@@ -678,8 +679,8 @@ class ConnectionSpec{
                 connection.links.add(connection.createLink(pre_u, post_u, w0, fw0, ix));
             }
         }
-        println("end: " + connection.name);
-        println();
+        //println("end: " + connection.name);
+        //println();
             
     }
 
@@ -753,7 +754,7 @@ class ConnectionSpec{
                 link.dwt += (  lrate * ( this.m_lrn * this.xcal(shortterm_avg_act, mediumterm_avg_act) // short, medium term -> error driven
                             + link.post().params().avg_l_lrn) 
                             * this.xcal(shortterm_avg_act, link.post().params().avg_l)); // long term -> hebbian
-                println("l_rule: " + link.name + ": dwt: " + link.dwt);
+                // println("l_rule: " + link.name + ": dwt: " + link.dwt);
         
             }
         }
@@ -766,7 +767,7 @@ class ConnectionSpec{
                      - link.post().params().avg_s_eff)
                     ); 
                             
-                println("l_rule: " + link.name + ": dwt: " + link.dwt);
+                // println("l_rule: " + link.name + ": dwt: " + link.dwt);
             }
         }
     }
@@ -776,7 +777,7 @@ class ConnectionSpec{
         for (Link link : connection.links){
             // print('before  wt={}  fwt={}  dwt={}'.format(link.wt, link.fwt, link.dwt))
             link.dwt *= (link.dwt > 0) ? (1 - link.fwt) : link.fwt;
-            println("apl_dwt: " + link.name + ": dwt: " + link.dwt + "; fwt: " + link.fwt);
+            // println("apl_dwt: " + link.name + ": dwt: " + link.dwt + "; fwt: " + link.fwt);
             link.fwt += link.dwt; // updates pre-sigmoid wt
             if (dbg) {println(link.name + " dwt: " + link.dwt + "; fwt: " + link.fwt);
                 println("wt before: " + link.wt);}

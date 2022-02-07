@@ -1175,3 +1175,20 @@ void drawTimeSeriesPlot(float[][] data, String legend){
         popMatrix();
         popMatrix();
     }
+
+class ArrayListExt<T> extends ArrayList {
+  ArrayListExt() {}
+  
+  ArrayListExt(T[] a) {
+    super();
+    for(T o: a) this.add(o);
+  }
+  
+  void add(T[] a) {
+    for(T o: a) this.add(o);
+  }
+
+  void add(ArrayListExt<T> a) {
+    for(Object o: a) this.add(o);
+  }
+}
