@@ -114,7 +114,8 @@ class EffortRegulationModel implements NetworkModule {
     Layer out_layer;
 
     Layer rulectx_prederror_layer; // used to drive effortful rule context
-    Layer ruledisinh_layer;
+    Layer rulectxdisinh_layer; // for changing rule ctx via dendrite conn
+    //Layer ruledisinh_layer; // for change rule via dendrite conn
     
 
     // connections
@@ -143,8 +144,10 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection rulectx_prederror_conn;
     LayerConnection prederror_effortmagn; // drives magnitude of effort
     LayerConnection color_prederror_conn; // dec demand task
-    LayerConnection prederror_ruledisnh_conn; // population for disinhibiting rules
+    LayerConnection prederror_ruledisnh_conn; // channel effort to change rule ctx
     DendriteConnection disinh_rulectx_conn;
+    LayerConnection ruledisinh_conn; // population for disinhibiting rules
+    LayerConnection decdmd_disinh_conn; // disinh rules in dec demand task
 
     
 
@@ -216,7 +219,8 @@ class EffortRegulationModel implements NetworkModule {
         valence_layer = new Layer(valence_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Valence");
 
         rulectx_prederror_layer = new Layer(rulectx_size, new LayerSpec(true), excite_unit_spec, HIDDEN, "Rule pred error");
-        ruledisinh_layer = new Layer(rulectx_size, new LayerSpec(false), auto_unit_spec, HIDDEN, "Rule disinh");
+        rulectxdisinh_layer = new Layer(rulectx_size, new LayerSpec(false), auto_unit_spec, HIDDEN, "Rule ctx disinh"); // inh by pred error
+        // ruledisinh_layer = new Layer(rulectx_size, new LayerSpec(false), auto_unit_spec, HIDDEN, "Rule disinh"); // inh by rule ctx
         
         layers = new ArrayListExt<Layer>(); //new Layer[9];
         int ix = 0;
@@ -230,7 +234,8 @@ class EffortRegulationModel implements NetworkModule {
         layers.add(number_layer);
         layers.add(valence_layer);
         layers.add(rulectx_prederror_layer);
-        layers.add(ruledisinh_layer);
+        layers.add(rulectxdisinh_layer);
+        //layers.add(ruledisinh_layer);
         
         // assert(ix == layers.length) : "ix: " + ix + " layers.length: " + layers.length;
 
@@ -343,13 +348,30 @@ class EffortRegulationModel implements NetworkModule {
         //color_spec.rnd_var = 0;
         color_prederror_conn = new LayerConnection(color_layer, rulectx_prederror_layer, color_spec);
         // dendr inh population
-        prederror_ruledisnh_conn = new LayerConnection(rulectx_prederror_layer, ruledisinh_layer, oto_inh_spec);
+        prederror_ruledisnh_conn = new LayerConnection(rulectx_prederror_layer, rulectxdisinh_layer, oto_inh_spec);
         // dendr connection to effort_rule_ctx_conn
         ConnectionSpec full_inh_spec = new ConnectionSpec(full_spec);
         full_inh_spec.type = GABA;
-        disinh_rulectx_conn = new DendriteConnection(ruledisinh_layer, effort_rule_ctx_conn, full_inh_spec);
+        disinh_rulectx_conn = new DendriteConnection(rulectxdisinh_layer, effort_rule_ctx_conn, full_inh_spec);
         disinh_rulectx_conn.weights(rulectx_weights);
-        // inh conn from prederror to dendr inh population
+        // inh conn from mode to rule disinh population
+        //ConnectionSpec ruledisinh_spec = new ConnectionSpec(oto_spec);
+        //ruledisinh_spec.type = GABA;
+        //ruledisinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), ruledisinh_layer, ruledisinh_spec);
+        
+        float[][] decdmd_weights = tileCols(2, id(dec_dmnd_rule_mod.rules.get(0)[0].length));
+        ConnectionSpec decdmd_disinh_spec = new ConnectionSpec(oto_spec);
+        decdmd_disinh_spec.pre_indeces = new int[2];
+        decdmd_disinh_spec.pre_indeces[0] = 0;
+        decdmd_disinh_spec.pre_indeces[1] = 1;
+        decdmd_disinh_spec.post_indeces = new int[2];
+        decdmd_disinh_spec.post_indeces[0] = 1;
+        decdmd_disinh_spec.post_indeces[1] = 0;
+        decdmd_disinh_spec.rnd_mean = 0.5;
+        //decdmd_disinh_spec.type = GABA;
+        decdmd_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), dec_dmnd_rule_mod.layer("inhibition"), decdmd_disinh_spec);
+
+
         // dendriteconn from rule context to decdemand
         // dendriteconn from rule context to  wisconsin
         
@@ -381,6 +403,8 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(color_prederror_conn);
         connections.add(prederror_ruledisnh_conn);
         connections.add(disinh_rulectx_conn);
+        // connections.add(ruledisinh_conn);
+        connections.add(decdmd_disinh_conn);
     
     }
 
@@ -499,7 +523,9 @@ class EffortRegulationModel implements NetworkModule {
         translate(0, 100);
         drawStrip(rulectx_prederror_layer.output(), rulectx_prederror_layer.name());
         translate(0, 20);
-        drawStrip(ruledisinh_layer.output(), ruledisinh_layer.name());
+        drawStrip(rulectxdisinh_layer.output(), rulectxdisinh_layer.name());
+        // translate(0, 20);
+        // drawStrip(ruledisinh_layer.output(), ruledisinh_layer.name());
         popMatrix();
 
         pushMatrix();
