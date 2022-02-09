@@ -2,6 +2,7 @@ class RuleModule implements NetworkModule {
     static final String IN = "in";
     static final String OUT = "out";
     static final String INHIBITION = "inhibition";
+    static final String DISINHIBITION = "disinhibition";
     
     String name = "RuleModule";
 
@@ -23,6 +24,7 @@ class RuleModule implements NetworkModule {
     Layer in_layer; // used for translation to pop code to engage effort
     Layer out_layer;
     Layer inh_layer; // inhibitits all rule connections and must be disinh
+    Layer disinh_layer;
     
 
     // connections
@@ -67,13 +69,15 @@ class RuleModule implements NetworkModule {
         String shortname = this.name.substring(0,3);
         in_layer = new Layer(tmp.length, new LayerSpec(false), excite_unit_spec, HIDDEN, shortname + " In (in)");
         inh_layer = new Layer(rules.size(), new LayerSpec(false), auto_spec, HIDDEN, shortname + " Inhib (in)");
+        disinh_layer = new Layer(rules.size(), new LayerSpec(false), excite_unit_spec, HIDDEN, shortname + " Disinh (in)");
         out_layer = new Layer(tmp[0].length, new LayerSpec(false), excite_unit_spec, HIDDEN, shortname + " Out (out)");
         
         int layerix = 0;
-        layers = new Layer[3];
+        layers = new Layer[4];
         layers[layerix++] = in_layer;
         layers[layerix++] = out_layer;
         layers[layerix++] = inh_layer;
+        layers[layerix++] = disinh_layer;
         // connections = new ArrayListExt<Connection>(); //new Connection[rules.size()];
         for (int i = 0; i < rules.size(); ++i) {
             LayerConnection lc = new LayerConnection(in_layer, out_layer, full_spec);
@@ -87,6 +91,10 @@ class RuleModule implements NetworkModule {
             DendriteConnection dc = new DendriteConnection(inh_layer, lc, dc_spec);
             inh_connections.add(dc);
         }
+        ConnectionSpec oto_spec = new ConnectionSpec();
+        oto_spec.proj = "1to1";
+        LayerConnection disinh_conn = new LayerConnection(disinh_layer, inh_layer, oto_spec);
+        inh_connections.add(disinh_conn);
         
         
     }
@@ -106,6 +114,8 @@ class RuleModule implements NetworkModule {
         switch(l) {
             case INHIBITION:
                 return inh_layer; // rule/dendrite inhibition
+            case DISINHIBITION:
+                return disinh_layer; // rule/dendrite inhibition
             case IN:
                 return in_layer; // input
             case OUT:
@@ -137,6 +147,7 @@ class RuleModule implements NetworkModule {
         // draw the layers
         drawStrip(in_layer.getOutput(), in_layer.name);
         drawStrip(inh_layer.getOutput(), inh_layer.name);
+        drawStrip(disinh_layer.getOutput(), disinh_layer.name);
         drawStrip(out_layer.getOutput(), out_layer.name);
         // draw the rules
         translate(0,30);
