@@ -42,6 +42,8 @@ class TestRuleMod {
     // layer
     Layer input_layer; 
     Layer hidden_layer; 
+    Layer disinh_layer;
+    Layer inh_layer;
     
     // connections
     ConnectionSpec ffexcite_spec  = new ConnectionSpec();
@@ -56,6 +58,8 @@ class TestRuleMod {
     int inp_ix = 0;
 
     float[] inputval = zeros(inputvecsize);
+    float[] disinhval = zeros(hiddensize);
+    float[] inhval = zeros(1);
 
     TestRuleMod () {
         // unit
@@ -91,17 +95,36 @@ class TestRuleMod {
 
         // layers
         input_layer = new Layer(inputvecsize, new LayerSpec(false), excite_unit_spec, INPUT, "Input");
+        disinh_layer = new Layer(hiddensize, new LayerSpec(false), excite_unit_spec, INPUT, "Disinh");
+        inh_layer = new Layer(1, new LayerSpec(false), excite_unit_spec, INPUT, "Inh");
         hidden_layer = new Layer(hiddensize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Hidden");
         
+        
+        ConnectionSpec inh_spec = new ConnectionSpec();
+        inh_spec.proj = "full";
+        inh_spec.type = GABA;
+        inh_spec.rnd_var = 0;
+        ConnectionSpec full_spec = new ConnectionSpec();
+        full_spec.rnd_mean = inh_spec.rnd_mean; // + .01;
+        full_spec.rnd_var = 0;
+        ConnectionSpec oto_spec = new ConnectionSpec();
+        oto_spec.proj = "1to1";
+        oto_spec.type = GABA;
+        oto_spec.rnd_mean = full_spec.rnd_mean + 0.1;
+        oto_spec.rnd_var = 0;
         // connections
         input_rule_conn = new LayerConnection(input_layer, rule_mod.layer("in"), ffexcite_spec);
         rule_hidden_conn = new LayerConnection(rule_mod.layer("out"), hidden_layer, ffexcite_spec);
+        LayerConnection inh_conn = new LayerConnection(inh_layer, rule_mod.layer("inhibition"), inh_spec);
+        LayerConnection exc_conn = new LayerConnection(inh_layer, rule_mod.layer("disinhibition"), full_spec);
+        LayerConnection disinh_conn = new LayerConnection(disinh_layer, rule_mod.layer("disinhibition"), oto_spec);
 
         // network
         network_spec.do_reset = false; // since dont use learning, avoid resetting every quarter
 
-        Layer[] layers = {input_layer, hidden_layer};
-        Connection[] conns = {input_rule_conn, rule_hidden_conn};
+        Layer[] layers = {input_layer, hidden_layer, disinh_layer, inh_layer};
+        Connection[] conns = {input_rule_conn, rule_hidden_conn, 
+            disinh_conn, inh_conn, exc_conn};
 
 
         netw = new Network(network_spec, layers, conns);
@@ -116,6 +139,8 @@ class TestRuleMod {
             float[] inp = inputval;
             FloatList inpvals = arrayToList(inp);
             inputs.put("Input", inpvals);
+            inputs.put("Disinh", arrayToList(disinhval));
+            inputs.put("Inh", arrayToList(inhval));
             netw.set_inputs(inputs);
         }
         netw.cycle();
@@ -146,8 +171,10 @@ class TestRuleMod {
             drawColGrid(0,0, 10, multiply(200, inp_viz));
             popMatrix();
             popMatrix();
+            drawLayer(inh_layer);
+            drawLayer(disinh_layer);
 
-            translate(0,0);
+            translate(0,20);
 
             rule_mod.draw();
             translate(0,230);
@@ -178,10 +205,17 @@ class TestRuleMod {
     }
 
     void handleMidi(int note, int vel){
-        //println("Note "+ note + ", vel " + vel);
+        println("Note "+ note + ", vel " + vel);
         float scale = 1.0/127.0;
         if(note>=81)
             inputval[note-81] = scale * vel; 
+        if(note == 65)
+            inhval[0] = scale*vel;
+        if(note == 66)
+            disinhval[0] = scale*vel;
+        if(note == 67)
+            disinhval[1] = scale*vel;
+        
     }
 
     void drawLayer(Layer layer){
