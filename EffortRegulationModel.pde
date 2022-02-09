@@ -121,7 +121,7 @@ class EffortRegulationModel implements NetworkModule {
     // connections
     ConnectionSpec full_spec = new ConnectionSpec();
     ConnectionSpec oto_spec;
-    LayerConnection in_out_conn; // population to gain
+    LayerConnection decdemand_out_conn; // population to gain
 
     LayerConnection inp_task_ctx_conn; // divide up input vec so see what simulation is
     LayerConnection inp_temp_ctx_conn;
@@ -244,7 +244,12 @@ class EffortRegulationModel implements NetworkModule {
         
         // assert(ix == layers.length) : "ix: " + ix + " layers.length: " + layers.length;
 
-        in_out_conn = new LayerConnection(in_layer, out_layer, full_spec);
+        ConnectionSpec decdem_out_spec = new ConnectionSpec();
+        decdem_out_spec.proj = "1to1";
+        decdem_out_spec.post_startix = 0;
+        decdem_out_spec.post_endix = 1;
+        decdemand_out_conn = new LayerConnection(dec_dmnd_rule_mod.layer("out"), out_layer, decdem_out_spec);
+
 
         ConnectionSpec[] tmpspec = new ConnectionSpec[7];
         ix = 0;
@@ -404,7 +409,7 @@ class EffortRegulationModel implements NetworkModule {
         ix = 0;
         // connections = new Connection[8];
         connections = new ArrayListExt<Connection>();
-        connections.add(in_out_conn);
+        connections.add(decdemand_out_conn);
         connections.add(inp_task_ctx_conn);
         connections.add(inp_temp_ctx_conn);
         connections.add(inp_position_conn);
