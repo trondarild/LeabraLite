@@ -135,9 +135,12 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection inp_wisc_rule_conn;
     LayerConnection inp_stop_rule_conn;
 
-    LayerConnection task_ctx_decdem_conn; // connections to disinh all rules in rule modules
+    LayerConnection task_ctx_decdem_conn;
+    LayerConnection task_ctx_decdem_disinh_conn; // connections to disinh all rules in rule modules
     LayerConnection task_ctx_wisc_conn;
+    LayerConnection task_ctx_wisc_disinh_conn;
     LayerConnection task_ctx_stop_conn;
+    LayerConnection task_ctx_stop_disinh_conn;
 
     LayerConnection effort_rule_ctx_conn; // effortful change of rules
     LayerConnection negvalence_rulectxprederror_conn; // negative valence excites prediction error, driving effort
@@ -148,7 +151,8 @@ class EffortRegulationModel implements NetworkModule {
     DendriteConnection disinh_rulectx_conn;
     LayerConnection ruledisinh_conn; // population for disinhibiting rules
     LayerConnection decdmd_disinh_conn; // disinh rules in dec demand task
-    DendriteConnection wisconsin_disinh_conn; // disinh rules in wisconsin task
+    LayerConnection wisconsin_disinh_conn; // disinh rules in wisconsin task
+    LayerConnection stop_disinh_conn;
 
     
 
@@ -310,19 +314,33 @@ class EffortRegulationModel implements NetworkModule {
         stop_spec.post_endix = 1;
         inp_stop_rule_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("in"), stop_spec);
 
+        //
+        //
         ConnectionSpec rule_selection_spec = new ConnectionSpec(full_spec);
         rule_selection_spec.type = GABA;
         rule_selection_spec.pre_startix = 0;
         rule_selection_spec.pre_endix = 0;
+        ConnectionSpec rule_disinh_spec = new ConnectionSpec(rule_selection_spec);
+        rule_disinh_spec.type = GLUTAMATE;
+        //rule_disinh_spec.rnd_mean = rule_selection_spec.rnd_mean + 0.01;
         task_ctx_decdem_conn = new LayerConnection(in_layer, dec_dmnd_rule_mod.layer("inhibition"), rule_selection_spec);
+        task_ctx_decdem_disinh_conn = new LayerConnection(in_layer, dec_dmnd_rule_mod.layer("disinhibition"), rule_disinh_spec);
+        
         rule_selection_spec = new ConnectionSpec(rule_selection_spec);
         rule_selection_spec.pre_startix = 1;
         rule_selection_spec.pre_endix = 1;
+        rule_disinh_spec = new ConnectionSpec(rule_selection_spec);
+        rule_disinh_spec.type = GLUTAMATE;
         task_ctx_wisc_conn = new LayerConnection(in_layer, wisconsin_rule_mod.layer("inhibition"), rule_selection_spec);
+        task_ctx_wisc_disinh_conn  = new LayerConnection(in_layer, wisconsin_rule_mod.layer("disinhibition"), rule_disinh_spec);
+
         rule_selection_spec = new ConnectionSpec(rule_selection_spec);
         rule_selection_spec.pre_startix = 2;
         rule_selection_spec.pre_endix = 2;
+        rule_disinh_spec = new ConnectionSpec(rule_selection_spec);
+        rule_disinh_spec.type = GLUTAMATE;
         task_ctx_stop_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("inhibition"), rule_selection_spec);
+        task_ctx_stop_disinh_conn = new LayerConnection(in_layer, stop_task_rule_mod.layer("disinhibition"), rule_disinh_spec);
 
         float[][] rulectx_weights = tileCols(effortsize, id(rulectx_size));
         effort_rule_ctx_conn = new LayerConnection(effort_mod.layer("gain"), rule_ctx_mod.layer("mode"), full_spec);
@@ -360,27 +378,24 @@ class EffortRegulationModel implements NetworkModule {
         //ruledisinh_spec.type = GABA;
         //ruledisinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), ruledisinh_layer, ruledisinh_spec);
         
-        ConnectionSpec decdmd_disinh_spec = new ConnectionSpec(oto_spec);
+        ConnectionSpec decdmd_disinh_spec = new ConnectionSpec(oto_inh_spec);
         decdmd_disinh_spec.pre_indeces = new int[2];
         decdmd_disinh_spec.pre_indeces[0] = 0;
         decdmd_disinh_spec.pre_indeces[1] = 1;
         decdmd_disinh_spec.post_indeces = new int[2];
-        decdmd_disinh_spec.post_indeces[0] = 1;
-        decdmd_disinh_spec.post_indeces[1] = 0;
-        decdmd_disinh_spec.rnd_mean = 0.5;
+        decdmd_disinh_spec.post_indeces[0] = 0;
+        decdmd_disinh_spec.post_indeces[1] = 1;
+        //decdmd_disinh_spec.rnd_mean = 0.5;
         // TODO change to dendrite connection onto disinh projection from input to decdemand
-        decdmd_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), dec_dmnd_rule_mod.layer("inhibition"), decdmd_disinh_spec);
+        decdmd_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), dec_dmnd_rule_mod.layer("disinhibition"), decdmd_disinh_spec);
 
         ConnectionSpec wisconsin_disinh_spec = new ConnectionSpec(oto_inh_spec);
-        // wisconsin_disinh_spec.pre_indeces = new int[3];
-        // wisconsin_disinh_spec.pre_indeces[0] = 0;
-        // wisconsin_disinh_spec.pre_indeces[1] = 1;
-        // wisconsin_disinh_spec.pre_indeces[2] = 2;
-        // wisconsin_disinh_spec.post_indeces = new int[3];
-        // wisconsin_disinh_spec.post_indeces[0] = 2;
-        // wisconsin_disinh_spec.post_indeces[1] = 0;
-        // wisconsin_disinh_spec.post_indeces[2] = 1;
-        wisconsin_disinh_conn = new DendriteConnection(rule_ctx_mod.layer("mode"), task_ctx_wisc_conn, wisconsin_disinh_spec);
+        wisconsin_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), wisconsin_rule_mod.layer("disinhibition"), wisconsin_disinh_spec);
+
+        ConnectionSpec stop_disinh_spec = new ConnectionSpec(oto_inh_spec);
+        stop_disinh_spec.pre_startix = 0;
+        stop_disinh_spec.pre_endix = 0;
+        stop_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), stop_task_rule_mod.layer("disinhibition"), stop_disinh_spec);
         
 
         // dendriteconn from rule context to decdemand
@@ -403,8 +418,11 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(inp_stop_rule_conn);
 
         connections.add(task_ctx_decdem_conn);
+        connections.add(task_ctx_decdem_disinh_conn);
         connections.add(task_ctx_wisc_conn);
+        connections.add(task_ctx_wisc_disinh_conn);
         connections.add(task_ctx_stop_conn);
+        connections.add(task_ctx_stop_disinh_conn);
 
         connections.add(negvalence_rulectxprederror_conn);
 
@@ -417,6 +435,7 @@ class EffortRegulationModel implements NetworkModule {
         // connections.add(ruledisinh_conn);
         connections.add(decdmd_disinh_conn);
         connections.add(wisconsin_disinh_conn);
+        connections.add(stop_disinh_conn);
     
     }
 
