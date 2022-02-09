@@ -148,6 +148,7 @@ class EffortRegulationModel implements NetworkModule {
     DendriteConnection disinh_rulectx_conn;
     LayerConnection ruledisinh_conn; // population for disinhibiting rules
     LayerConnection decdmd_disinh_conn; // disinh rules in dec demand task
+    DendriteConnection wisconsin_disinh_conn; // disinh rules in wisconsin task
 
     
 
@@ -359,7 +360,6 @@ class EffortRegulationModel implements NetworkModule {
         //ruledisinh_spec.type = GABA;
         //ruledisinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), ruledisinh_layer, ruledisinh_spec);
         
-        float[][] decdmd_weights = tileCols(2, id(dec_dmnd_rule_mod.rules.get(0)[0].length));
         ConnectionSpec decdmd_disinh_spec = new ConnectionSpec(oto_spec);
         decdmd_disinh_spec.pre_indeces = new int[2];
         decdmd_disinh_spec.pre_indeces[0] = 0;
@@ -368,9 +368,20 @@ class EffortRegulationModel implements NetworkModule {
         decdmd_disinh_spec.post_indeces[0] = 1;
         decdmd_disinh_spec.post_indeces[1] = 0;
         decdmd_disinh_spec.rnd_mean = 0.5;
-        //decdmd_disinh_spec.type = GABA;
+        // TODO change to dendrite connection onto disinh projection from input to decdemand
         decdmd_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), dec_dmnd_rule_mod.layer("inhibition"), decdmd_disinh_spec);
 
+        ConnectionSpec wisconsin_disinh_spec = new ConnectionSpec(oto_inh_spec);
+        // wisconsin_disinh_spec.pre_indeces = new int[3];
+        // wisconsin_disinh_spec.pre_indeces[0] = 0;
+        // wisconsin_disinh_spec.pre_indeces[1] = 1;
+        // wisconsin_disinh_spec.pre_indeces[2] = 2;
+        // wisconsin_disinh_spec.post_indeces = new int[3];
+        // wisconsin_disinh_spec.post_indeces[0] = 2;
+        // wisconsin_disinh_spec.post_indeces[1] = 0;
+        // wisconsin_disinh_spec.post_indeces[2] = 1;
+        wisconsin_disinh_conn = new DendriteConnection(rule_ctx_mod.layer("mode"), task_ctx_wisc_conn, wisconsin_disinh_spec);
+        
 
         // dendriteconn from rule context to decdemand
         // dendriteconn from rule context to  wisconsin
@@ -405,6 +416,7 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(disinh_rulectx_conn);
         // connections.add(ruledisinh_conn);
         connections.add(decdmd_disinh_conn);
+        connections.add(wisconsin_disinh_conn);
     
     }
 
