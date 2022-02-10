@@ -94,6 +94,7 @@ class EffortRegulationModel implements NetworkModule {
     ChoiceModule beh_choice_mod; // check if can be used
     BasalGangliaModule bg_mod; 
     ModeModule rule_ctx_mod; // active rule for each task
+    SpatialAttentionBBoxModule attention_mod;
 
     // Reservoirs
     // Reservoir effort_adeno_res;
@@ -156,7 +157,9 @@ class EffortRegulationModel implements NetworkModule {
 
     LayerConnection pos_valence_conn; // learn valence of positions
     LayerConnection effort_valence_conn; // learning rate from effort
-
+    LayerConnection valence_att_conn;
+    LayerConnection attval_choice_conn;
+    LayerConnection attix_choice_conn;
     
 
     EffortRegulationModel() {
@@ -214,6 +217,7 @@ class EffortRegulationModel implements NetworkModule {
         val_learning_mod = new ValenceLearningModule(position_size, "Valence learning (acc)");
         bg_mod = new BasalGangliaModule(3, "Motivation (bg)");
         rule_ctx_mod = new ModeModule(rulectx_size, "Rule context (pfc)");
+        attention_mod = new SpatialAttentionBBoxModule(position_size, "Spatial attention (pfc)");
 
         // layers
         in_layer = new Layer(inputvecsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (occipital ctx)");
@@ -411,7 +415,12 @@ class EffortRegulationModel implements NetworkModule {
         effortval_spec.rnd_mean = 0.1;
         effortval_spec.rnd_var = 0.;
         effort_valence_conn = new LayerConnection(effort_mod.layer("effort"), val_learning_mod.layer("neg_lr"), effortval_spec);
-     
+        valence_att_conn = new LayerConnection(val_learning_mod.layer("sum"), attention_mod.layer("in"), oto_spec);
+        ConnectionSpec att_spec = new ConnectionSpec(oto_spec);
+        att_spec.rnd_mean = 0.125;
+        attval_choice_conn = new LayerConnection(attention_mod.layer("value"), target_choice_mod.acc.layer("value"), att_spec);
+        attix_choice_conn = new LayerConnection(attention_mod.layer("spatial_ix"), target_choice_mod.acc.layer("spatial_ix"), att_spec);
+
         
         ix = 0;
         // connections = new Connection[8];
@@ -451,6 +460,9 @@ class EffortRegulationModel implements NetworkModule {
 
         connections.add(pos_valence_conn);
         connections.add(effort_valence_conn);
+        connections.add(valence_att_conn);
+        connections.add(attval_choice_conn);
+        connections.add(attix_choice_conn);
     
     }
 
@@ -466,6 +478,7 @@ class EffortRegulationModel implements NetworkModule {
         ale.add(val_learning_mod.layers());
         ale.add(bg_mod.layers());
         ale.add(rule_ctx_mod.layers());
+        ale.add(attention_mod.layers());
         ale.add(layers);
         Layer[] retval = new Layer[ale.size()];
         ale.toArray(retval);
@@ -482,6 +495,7 @@ class EffortRegulationModel implements NetworkModule {
         ale.add(val_learning_mod.connections());
         ale.add(bg_mod.connections());
         ale.add(rule_ctx_mod.connections());
+        ale.add(attention_mod.connections());
         ale.add(connections);
         Connection[] retval = new Connection[ale.size()];
         ale.toArray(retval);
@@ -503,6 +517,7 @@ class EffortRegulationModel implements NetworkModule {
     void cycle() {   
         dec_dmnd_rule_mod.cycle();
         effort_mod.cycle(); // drive pop coding
+        attention_mod.cycle(); // drive attentional cycle
     }
 
     void draw() {
@@ -579,6 +594,13 @@ class EffortRegulationModel implements NetworkModule {
         val_learning_mod.fill_col = this.fill_col + 10;
         val_learning_mod.boundary_w = 300;
         val_learning_mod.draw();
+        popMatrix();
+
+        pushMatrix();
+        translate(610, 0);
+        attention_mod.fill_col = this.fill_col + 10;
+        attention_mod.boundary_w = 250;
+        attention_mod.draw();
         popMatrix();
 
         translate(0, 370);
