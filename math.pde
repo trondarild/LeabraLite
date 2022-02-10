@@ -217,6 +217,15 @@ int argmax(float[] a){
   return retval;
 }
 
+int argmin(float[] a){
+  int retval = 0;
+  
+  for(int i=0; i<a.length; i++)
+    if(a[retval] > a[i])
+      retval = i;
+  return retval;
+}
+
 int argmax(float[] a, int start, int stop){
   int retval = 0;
   for (int i = start; i < stop; ++i) {
