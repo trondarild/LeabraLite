@@ -1,15 +1,16 @@
 class SpatialAttentionBBoxModule implements NetworkModule {
     static final String IN = "in";
-    static final String OUT = "out";
+    static final String VALUE = "value";
+    static final String SPATIALIX = "spatial_ix";
     
     String name = "SpatialAttentionBBoxModule";
     
-    Layer[] layers = new Layer[2];
+    Layer[] layers = new Layer[3];
     Connection[] connections; // = new Connection[1];
     int layersize = 2;
     int fill_col = 60;
     int boundary_w = 220;
-    int boundary_h = 100;
+    int boundary_h = 130;
     boolean do_saccade = true; // whether to do_saccade or saccade
 
     // units
@@ -17,7 +18,8 @@ class SpatialAttentionBBoxModule implements NetworkModule {
 
     // layers
     Layer in_layer; // used for translation to pop code to engage effort
-    Layer out_layer;
+    Layer value_layer;
+    Layer spatial_ix_layer;
     
 
     // connections
@@ -59,14 +61,16 @@ class SpatialAttentionBBoxModule implements NetworkModule {
         
 
         in_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (in)");
-        out_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (out)");
+        value_layer = new Layer(1, new LayerSpec(false), excite_unit_spec, HIDDEN, "Value (out)");
+        spatial_ix_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Spatial ix (out)");
         
         int layerix = 0;
         layers[layerix++] = in_layer;
-        layers[layerix++] = out_layer;
+        layers[layerix++] = value_layer;
+        layers[layerix++] = spatial_ix_layer;
 
-        in_out_conn = new LayerConnection(in_layer, out_layer, full_spec);
-        //ConnectionSpec out_in_connection(out_layer, in_layer)
+        //in_out_conn = new LayerConnection(in_layer, value_layer, full_spec);
+        //ConnectionSpec out_in_connection(value_layer, in_layer)
         connections = new Connection[0];
         //connections[0] = in_out_conn;
         
@@ -78,8 +82,10 @@ class SpatialAttentionBBoxModule implements NetworkModule {
         switch(l) {
             case IN:
                 return in_layer; // input
-            case OUT:
-                return out_layer; // output
+            case SPATIALIX:
+                return spatial_ix_layer;
+            case VALUE:
+                return value_layer; // output
             default:
                 assert(false): "No layer named '" + l + "' defined, check spelling.";
                 return null;
@@ -98,9 +104,9 @@ class SpatialAttentionBBoxModule implements NetworkModule {
         else {
             //println("fixating");
             outval = multiply(0.999, outval); // downregulate to induce saccade
-            out_layer.force_activity(outval); 
+            value_layer.force_activity(outval); 
 
-            if (similar(max(out_layer.output()), max(outval), 0.1)){
+            if (similar(max(value_layer.output()), max(outval), 0.1)){
                 in_layer.force_activity(zeros(layersize));
                 do_saccade = true;
             }
@@ -110,11 +116,15 @@ class SpatialAttentionBBoxModule implements NetworkModule {
         float sinval = sin(0.07 * ctr++);
         //ctr = (ctr + 0.5) % 360;
         reset(outval);
-        if(sinval > 0.0) 
-            outval[0] = in_layer.output()[0];     
-        else
-            outval[1] = in_layer.output()[1];
-        out_layer.force_activity(outval); 
+        //if(sinval > 0.0) 
+        //    outval[0] = in_layer.output()[0];     
+        //else
+        //    outval[1] = in_layer.output()[1];
+        int ix = sinval > 0.0 ? 0 : 1;
+        float[] value = {in_layer.output()[ix]};
+        value_layer.force_activity(value); //max(outval));
+        outval[ix] = 1;
+        spatial_ix_layer.force_activity(outval); 
 
 
     }
@@ -134,15 +144,16 @@ class SpatialAttentionBBoxModule implements NetworkModule {
         translate(10, 20);
         text(this.name, 0,0);
 
-        translate(0, 20);
-        pushMatrix();
-        scale(1.5);
-        text(do_saccade ? "Saccading" : "Fixating", 0, 0);
-        popMatrix();
+        // translate(0, 20);
+        // pushMatrix();
+        // scale(1.5);
+        // text(do_saccade ? "Saccading" : "Fixating", 0, 0);
+        // popMatrix();
 
         // draw the layers
-        drawStrip(in_layer.getOutput(), in_layer.name);
-        drawStrip(out_layer.getOutput(), out_layer.name);
+        drawStrip(in_layer.output(), in_layer.name());
+        drawStrip(spatial_ix_layer.output(), spatial_ix_layer.name());
+        drawStrip(value_layer.output(), value_layer.name());
         
         popMatrix();
     }

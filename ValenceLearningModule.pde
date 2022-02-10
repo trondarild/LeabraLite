@@ -79,11 +79,17 @@ class ValenceLearningModule implements NetworkModule {
         oto_learn_spec.lrule = "delta";
         oto_learn_spec.lrate = .1;
 
+        ConnectionSpec oto_learn_appr_spec = new ConnectionSpec(oto_learn_spec);
+        oto_learn_appr_spec.rnd_mean = oto_learn_spec.rnd_mean + 0.035; // to force choice
+
+        float sumgain = 0.4;
         ConnectionSpec oto_exc_spec = new ConnectionSpec(oto_learn_spec);
         oto_exc_spec.lrule = "";
+        oto_exc_spec.rnd_mean = sumgain;
         oto_exc_spec.type = GLUTAMATE;
 
         ConnectionSpec oto_inh_spec = new ConnectionSpec(oto_learn_spec);
+        oto_inh_spec.rnd_mean = sumgain;
         
         oto_inh_spec.type = GABA;
 
@@ -98,7 +104,7 @@ class ValenceLearningModule implements NetworkModule {
         sum_layer = new Layer(popsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Sum (out)");
         // connections
         property_avoidance_conn = new LayerConnection(property_layer, avoidance_layer, oto_learn_spec, chol_w_spec);
-        property_approach_conn = new LayerConnection(property_layer, approach_layer, oto_learn_spec, chol_w_spec);
+        property_approach_conn = new LayerConnection(property_layer, approach_layer, oto_learn_appr_spec, chol_w_spec);
         lr_avoidance_conn = new DendriteConnection(neg_lr_layer, property_avoidance_conn, choline_spec);
         lr_approach_conn = new DendriteConnection(pos_lr_layer, property_approach_conn, choline_spec);
         avoidance_sum_conn = new LayerConnection(avoidance_layer, sum_layer, oto_inh_spec);
