@@ -154,6 +154,9 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection wisconsin_disinh_conn; // disinh rules in wisconsin task
     LayerConnection stop_disinh_conn;
 
+    LayerConnection pos_valence_conn; // learn valence of positions
+    LayerConnection effort_valence_conn; // learning rate from effort
+
     
 
     EffortRegulationModel() {
@@ -402,9 +405,13 @@ class EffortRegulationModel implements NetworkModule {
         stop_disinh_spec.pre_endix = 0;
         stop_disinh_conn = new LayerConnection(rule_ctx_mod.layer("mode"), stop_task_rule_mod.layer("disinhibition"), stop_disinh_spec);
         
-
-        // dendriteconn from rule context to decdemand
-        // dendriteconn from rule context to  wisconsin
+        // valence learning and choice
+        pos_valence_conn = new LayerConnection(position_layer, val_learning_mod.layer("property"), oto_spec);
+        ConnectionSpec effortval_spec = new ConnectionSpec(full_spec);
+        effortval_spec.rnd_mean = 0.1;
+        effortval_spec.rnd_var = 0.;
+        effort_valence_conn = new LayerConnection(effort_mod.layer("effort"), val_learning_mod.layer("neg_lr"), effortval_spec);
+     
         
         ix = 0;
         // connections = new Connection[8];
@@ -441,6 +448,9 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(decdmd_disinh_conn);
         connections.add(wisconsin_disinh_conn);
         connections.add(stop_disinh_conn);
+
+        connections.add(pos_valence_conn);
+        connections.add(effort_valence_conn);
     
     }
 
