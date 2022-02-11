@@ -4,6 +4,7 @@ A processing port and modification of the Leabra neural modeling framework. Base
 * 2022-01-28: This is heavily in development; nothing can be expected to work!
 
 ## Installation
+1. Intall the required processing libraries: TheMidiBus (for controlling sketches with MIDI)
 1. clone the repository, e.g. into your Processing sketchbook folder
 2. Open the LeabraLite.pde sketch in Processing
 ## Modifications
