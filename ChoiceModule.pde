@@ -74,8 +74,11 @@ class ChoiceModule implements NetworkModule {
         dopa_spec.rnd_mean = 4.0;
         dopa_spec.rnd_var = 0.;
 
+        ConnectionSpec gaba_spec = new ConnectionSpec(dopa_spec);
+        gaba_spec.type = GABA;
+
         acc_choice_conn = new LayerConnection(acc.layer("accumulator"), choice_layer, oto_spec);
-        reset_conn = new LayerConnection( choice_layer, acc.layer("accumulator"), dopa_spec);
+        reset_conn = new LayerConnection( choice_layer, acc.layer("accumulator"), gaba_spec);
 
 
         int ix = 0;
