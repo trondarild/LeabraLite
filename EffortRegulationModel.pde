@@ -164,6 +164,9 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection attix_choice_conn;
 
     LayerConnection choice_out_conn;
+    DendriteConnection tempctx_choiceout_conn;
+    DendriteConnection tempctx_ruleout_conn;
+    DendriteConnection tempctx_attchoice_conn; // inhibit attention->choice until needed
     
 
     EffortRegulationModel() {
@@ -426,11 +429,22 @@ class EffortRegulationModel implements NetworkModule {
         attix_choice_conn = new LayerConnection(attention_mod.layer("spatial_ix"), target_choice_mod.acc.layer("spatial_ix"), att_spec);
 
         ConnectionSpec choiceout_spec = new ConnectionSpec(oto_spec);
-        choiceout_spec.post_startix = 0;
-        choiceout_spec.post_endix = 1;
+        choiceout_spec.post_startix = 2;
+        choiceout_spec.post_endix = 3;
         choice_out_conn = new LayerConnection(target_choice_mod.layer("out"), out_layer, choiceout_spec);
 
+        ConnectionSpec tmpctx_choiceout_spec = new ConnectionSpec(full_inh_spec);
+        tmpctx_choiceout_spec.pre_startix = 0;
+        tmpctx_choiceout_spec.pre_endix = 0;
+        tempctx_choiceout_conn = new DendriteConnection(temp_ctx_layer, choice_out_conn, tmpctx_choiceout_spec);
         
+        ConnectionSpec tmpctx_ruleout_spec = new ConnectionSpec(full_inh_spec);
+        tmpctx_ruleout_spec.pre_startix = 1;
+        tmpctx_ruleout_spec.pre_endix = 1;
+        tempctx_ruleout_conn = new DendriteConnection(temp_ctx_layer, decdemand_out_conn, tmpctx_ruleout_spec);
+
+        tempctx_attchoice_conn = new DendriteConnection(temp_ctx_layer, attval_choice_conn, tmpctx_choiceout_spec);
+
         ix = 0;
         // connections = new Connection[8];
         connections = new ArrayListExt<Connection>();
@@ -474,6 +488,9 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(attix_choice_conn);
 
         connections.add(choice_out_conn);
+        connections.add(tempctx_choiceout_conn);
+        connections.add(tempctx_ruleout_conn);
+        connections.add(tempctx_attchoice_conn);
     
     }
 
