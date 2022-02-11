@@ -1,5 +1,10 @@
 class EffortRegulationModel implements NetworkModule {
-    /** * 2022-02-10_
+    /** 
+        * 2022-02-11
+            * to fix: answer is yielded from rule module before rule ctx is updated -> wrong answer
+            * added reward input, but still get no "sum" in value learning when waiting for stack choice
+            * to fix: now learning of avoidance knocks out approach value, so now stack choice is made; compensate with dopa for correct?
+        * 2022-02-10_
             * connect choice to output
             * draw new card
         * 2022-02-04:
@@ -113,7 +118,7 @@ class EffortRegulationModel implements NetworkModule {
     Layer shape_layer;
     Layer color_layer;
     Layer number_layer;
-    Layer valence_layer;
+    Layer reward_layer;
     Layer out_layer;
 
     Layer rulectx_prederror_layer; // used to drive effortful rule context
@@ -132,7 +137,7 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection inp_shape_conn;
     LayerConnection inp_color_conn;
     LayerConnection inp_number_conn;
-    LayerConnection inp_valence_conn;
+    LayerConnection inp_reward_conn;
 
     LayerConnection inp_decdem_rule_conn; // connections to specific rule modules
     LayerConnection inp_wisc_rule_conn;
@@ -167,6 +172,8 @@ class EffortRegulationModel implements NetworkModule {
     DendriteConnection tempctx_choiceout_conn;
     DendriteConnection tempctx_ruleout_conn;
     DendriteConnection tempctx_attchoice_conn; // inhibit attention->choice until needed
+    
+    LayerConnection fb_valence_conn; // dopa when answering correctly
     
 
     EffortRegulationModel() {
@@ -235,7 +242,7 @@ class EffortRegulationModel implements NetworkModule {
         shape_layer = new Layer(shape_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Shape");
         color_layer = new Layer(color_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Color");
         number_layer = new Layer(number_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Number");
-        valence_layer = new Layer(valence_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Valence");
+        reward_layer = new Layer(valence_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Reward");
 
         rulectx_prederror_layer = new Layer(rulectx_size, new LayerSpec(true), excite_unit_spec, HIDDEN, "Rule pred error");
         rulectxdisinh_layer = new Layer(rulectx_size, new LayerSpec(false), auto_unit_spec, HIDDEN, "Rule ctx disinh"); // inh by pred error
@@ -251,7 +258,7 @@ class EffortRegulationModel implements NetworkModule {
         layers.add(shape_layer);
         layers.add(color_layer);
         layers.add(number_layer);
-        layers.add(valence_layer);
+        layers.add(reward_layer);
         layers.add(rulectx_prederror_layer);
         layers.add(rulectxdisinh_layer);
         //layers.add(ruledisinh_layer);
@@ -310,7 +317,7 @@ class EffortRegulationModel implements NetworkModule {
         tmpspec[ix].pre_endix = 26;
         tmpspec[ix].post_startix = 0;
         tmpspec[ix].post_endix = 1;
-        inp_valence_conn = new LayerConnection(in_layer, valence_layer, tmpspec[ix++]);
+        inp_reward_conn = new LayerConnection(in_layer, reward_layer, tmpspec[ix++]);
 
         ConnectionSpec decdem_spec = new ConnectionSpec(oto_spec);
         decdem_spec.pre_startix = 15;
@@ -368,7 +375,7 @@ class EffortRegulationModel implements NetworkModule {
         rulectx_spec.pre_startix = 1; // only use negative valence to drive prediction error
         rulectx_spec.pre_endix = 1;
         rulectx_spec.rnd_var= 0.1; // only a little variation to drive wta
-        negvalence_rulectxprederror_conn = new LayerConnection(valence_layer, rulectx_prederror_layer, rulectx_spec);
+        negvalence_rulectxprederror_conn = new LayerConnection(reward_layer, rulectx_prederror_layer, rulectx_spec);
 
         ConnectionSpec oto_inh_spec = new ConnectionSpec(oto_spec);
         oto_inh_spec.type = GABA;
@@ -444,6 +451,11 @@ class EffortRegulationModel implements NetworkModule {
         tempctx_ruleout_conn = new DendriteConnection(temp_ctx_layer, decdemand_out_conn, tmpctx_ruleout_spec);
 
         tempctx_attchoice_conn = new DendriteConnection(temp_ctx_layer, attval_choice_conn, tmpctx_choiceout_spec);
+        
+        ConnectionSpec posrew_spec = new ConnectionSpec(oto_spec);
+        posrew_spec.pre_startix = 0;
+        posrew_spec.pre_endix = 0;
+        fb_valence_conn = new LayerConnection(reward_layer, val_learning_mod.layer("pos_lr"), posrew_spec);
 
         ix = 0;
         // connections = new Connection[8];
@@ -455,7 +467,7 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(inp_shape_conn);
         connections.add(inp_color_conn);
         connections.add(inp_number_conn);
-        connections.add(inp_valence_conn);
+        connections.add(inp_reward_conn);
         
         connections.add(inp_decdem_rule_conn);
         connections.add(inp_wisc_rule_conn);
@@ -491,6 +503,8 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(tempctx_choiceout_conn);
         connections.add(tempctx_ruleout_conn);
         connections.add(tempctx_attchoice_conn);
+
+        connections.add(fb_valence_conn);
     
     }
 
@@ -581,7 +595,7 @@ class EffortRegulationModel implements NetworkModule {
         translate(170, -20);
         drawStrip(number_layer.output(), number_layer.name);
         translate(250, -20);
-        drawStrip(valence_layer.output(), valence_layer.name);
+        drawStrip(reward_layer.output(), reward_layer.name);
         popMatrix();
 
         translate(0, 20);
