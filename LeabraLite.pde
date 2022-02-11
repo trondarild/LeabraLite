@@ -11,12 +11,17 @@ MidiBus myBus;
 int midiDevice  = 0;
 
 // TestTemplate test = new TestTemplate(); // template for tests or models
-TestEffortAchDecisionModules test = new TestEffortAchDecisionModules();
-// TestChoiceMod test = new TestChoiceMod();
+// TestEffortAchDecisionModules test = new TestEffortAchDecisionModules();
+// TestAdenoModel test = new TestAdenoModel();
+// TestRuleMod test = new TestRuleMod();
+TestDecDemand test = new TestDecDemand();
+//TestSpatialAtt test = new TestSpatialAtt();
+
+
 
 
 void setup(){
-	size(600, 1000);
+	size(1000, 1500);
 	// unit.show_config();
   frameRate(30);
   MidiBus.list(); 
@@ -31,7 +36,7 @@ void update(){
 void draw(){
 	update();
 	background(51);
-	
+	scale(0.9);
 	test.draw();
 }
 

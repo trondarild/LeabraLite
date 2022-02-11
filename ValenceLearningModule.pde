@@ -15,6 +15,7 @@ class ValenceLearningModule implements NetworkModule {
     int popsize = 1; // size of populations representing positive and negative valence
     Layer[] layers = new Layer[6];
     Connection[] connections = new Connection[6];
+    float sumgain = 0.4;
 
     int boundary_w = 320; 
     int boundary_h = 340;
@@ -79,6 +80,10 @@ class ValenceLearningModule implements NetworkModule {
         oto_learn_spec.lrule = "delta";
         oto_learn_spec.lrate = .1;
 
+        ConnectionSpec oto_learn_appr_spec = new ConnectionSpec(oto_learn_spec);
+        oto_learn_appr_spec.rnd_mean = oto_learn_spec.rnd_mean + 0.035; // to force choice
+
+        
         ConnectionSpec oto_exc_spec = new ConnectionSpec(oto_learn_spec);
         oto_exc_spec.lrule = "";
         oto_exc_spec.type = GLUTAMATE;
