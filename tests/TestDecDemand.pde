@@ -23,12 +23,27 @@
 
 */
 
+/**
+    2022-02-09 TODO:
+        * call setAnswer on task when output is > threshold, and choose stack, triggering new
+            getNewCard() call
+        * move viz code to task; draw cards on top of test screen (scaled down)
+*/
+
 class TestDecDemand {
     String modelname = "Test decision demand task with mental effort model";
     String description = "Faders 1-3 control input";
 
-    int inputvecsize = 27; // ctx:3 reward:1 pos:2 color:4 number:10
+    int inputvecsize = 27; // ctx:3 tmpctx:2 pos:2 shape:4 color:4 number:10 reward:2
     int hiddensize = 4; // TODO update when calc number of discrete behaviours, including gating ones
+
+    final int DECDEMAND_TASKCTX_IX = 0;
+    final int WISCONSIN_TASKCTX_IX = 1;
+    final int USERULES_IX = 3; // first ix of temporal ix
+    final int USECHOICE_IX = 4;
+    final int LEFTPOS_IX = 5;
+    final int RIGHTPOS_IX = 6;
+    final int REWARD_IX = 25;
 
     float[] card; // [0-9 number, 10-13 colour]
     int stack; //
@@ -59,8 +74,20 @@ class TestDecDemand {
     int inp_ix = 0;
 
     float[] inputval = zeros(inputvecsize);
+    float[] inputval_tmp = inputval;
 
     int ix_bias = 0;
+
+    final String WAITING_FOR_ANSWER = "wait_answer";
+    final String REGISTERING_FB = "register_fb";
+    final String RESETTING_AFTER_ANSWER = "resetting_answer";
+    final String RESETTING_AFTER_CHOICE = "resetting_choice";
+    final String WAITING_FOR_CHOICE = "wait_choice";
+    String state = WAITING_FOR_ANSWER;
+
+    float[] answer_fb = zeros(2);
+    final int FB_TIME = 10;
+    int fb_ctr = FB_TIME;
 
     TestDecDemand () {
         
@@ -104,8 +131,10 @@ class TestDecDemand {
         netw.build();
 
         // draw first card
-        card = task.getNewCard(0);
-        inputval[0] = 1; // dec demand task
+        card = task.getNewCard(0); // start with leftmost stack
+        inputval[DECDEMAND_TASKCTX_IX] = 1; // dec demand task
+        inputval[USERULES_IX] = 1; // use rules, not choice
+        inputval[LEFTPOS_IX] = 1; // leftmost stack
         System.arraycopy(card, 10, inputval, 11, 2); // color
         System.arraycopy(card, 0, inputval, 15, 10); // number
 
@@ -114,6 +143,7 @@ class TestDecDemand {
     void setInput(float[] inp) { inputval = inp; }
 
     void tick() {
+        //println("state before: " + state);
         task.tick();
         if(netw.accept_input()) {
             float[] inp = inputval;
@@ -122,6 +152,99 @@ class TestDecDemand {
             netw.set_inputs(inputs);
         }
         netw.cycle();
+
+        // state machine:
+        switch (state) {
+            case WAITING_FOR_ANSWER:
+                if(max(getSubArray(mod.layer("out").output(), 0, 2)) > 0.5){
+                    // got an answer
+                    answer_fb = task.setAnswer(argmax(mod.layer("out").output())==0 ? 1.0 : 0.0);
+                    System.arraycopy(answer_fb, 0, inputval, REWARD_IX, 2);
+                    printArray("test: after reward: ", inputval);
+                    state = REGISTERING_FB;
+                }
+                break;
+            case REGISTERING_FB:
+                //println("registering fb: " + fb_ctr);
+                if(fb_ctr-- <= 0) {
+                    fb_ctr = FB_TIME;
+                    reset(inputval);
+                    inputval[USERULES_IX] = 0;
+                    inputval[USECHOICE_IX] = 1; // go into choice mode
+                    inputval[LEFTPOS_IX] = 1; // activate both left and right to choose
+                    inputval[RIGHTPOS_IX] = 1;
+                    
+                    state = WAITING_FOR_CHOICE;
+                } 
+                
+                break;
+            case RESETTING_AFTER_ANSWER:
+                break;
+            case WAITING_FOR_CHOICE:
+                if(max(getSubArray(mod.layer("out").output(), 2, 2)) > 0.5){
+                    // got a choice
+                    float[] choice = getSubArray(mod.layer("out").output(), 2, 2);
+                    printArray("choice", choice);
+                    int chix = argmax(choice);
+                    println("Test:tick: Chose position: " + chix);
+
+                    reset(inputval);
+                    reset(inputval_tmp);
+                    card = task.getNewCard(chix);
+                    inputval_tmp[DECDEMAND_TASKCTX_IX] = 1; // dec demand task
+                    inputval_tmp[USERULES_IX] = 1; // use rules, not choice
+                    inputval_tmp = setSubArray(choice, inputval_tmp, LEFTPOS_IX); // leftmost stack
+                    System.arraycopy(card, 10, inputval_tmp, 11, 2); // color
+                    System.arraycopy(card, 0, inputval_tmp, 15, 10); // number
+                    
+                    state = RESETTING_AFTER_CHOICE;
+
+                }
+                break;
+            default:
+            case RESETTING_AFTER_CHOICE:
+                if(max(mod.layer("out").output()) < 0.1) {
+                    System.arraycopy(inputval_tmp, 0, inputval, 0, inputval.length);
+                    state = WAITING_FOR_ANSWER;
+                }
+                
+                // mod.layer("out").force_activity(zeros(mod.layer("out").output().length));
+        }
+        //println("state after: " + state);
+
+        /*
+        if(max(mod.layer("out").output()) > 0.5){
+            // answer: 1.0 = yes, 0.0 = no
+            // output: ix 0 = yes, 1 = no
+            if(inputval[USERULES_IX] == 1) {
+                task.setAnswer(argmax(mod.layer("out").output())==0 ? 1.0 : 0.0);
+                reset(inputval);
+                inputval[USERULES_IX] = 0;
+                inputval[USECHOICE_IX] = 1; // go into choice mode
+                inputval[LEFTPOS_IX] = 1; // activate both left and right to choose
+                inputval[RIGHTPOS_IX] = 1;
+                // mod.layer("out").force_activity(zeros(mod.layer("out").output().length));
+            }
+            else if (inputval[USECHOICE_IX] == 1) {
+                // TODO wait 
+                // get the choice
+                float[] choice = getSubArray(mod.layer("out").output(), 2, 2);
+                printArray("choice", choice);
+                int chix = argmax(choice);
+                println("Chose position: " + chix);
+
+                //reset(inputval);
+                // card = task.getNewCard(chix);
+                // inputval[DECDEMAND_TASKCTX_IX] = 1; // dec demand task
+                // inputval[USERULES_IX] = 1; // use rules, not choice
+                // setSubArray(choice, inputval, LEFTPOS_IX); // leftmost stack
+                // System.arraycopy(card, 10, inputval, 11, 2); // color
+                // System.arraycopy(card, 0, inputval, 15, 10); // number
+                // mod.layer("out").force_activity(zeros(mod.layer("out").output().length));
+
+            }
+        }
+        */
 
     }
 
@@ -135,11 +258,18 @@ class TestDecDemand {
         text(description, 0, 0);
         popMatrix();
 
+        
+        translate(10,50);
+        pushMatrix();
+        task.boundary_w = 800;
+        task.boundary_h = 180;
+        task.draw();
+        popMatrix();
+
         float[][] inp_viz = zeros(1,inputvecsize);
         inp_viz[0] = input_layer.getOutput();
         //printArray("input layer output", inp_viz[0]);
-        
-        translate(10,50);
+        translate(0, 200);
         pushMatrix();
             drawLayer(input_layer);
 
