@@ -1,5 +1,7 @@
 class EffortRegulationModel implements NetworkModule {
-    /** 
+    /** * 2022-02-10_
+            * connect choice to output
+            * draw new card
         * 2022-02-04:
             * add re-assignable context module that mediates disinh of active rule for active task
         * 2022-02-03:
@@ -160,6 +162,8 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection valence_att_conn;
     LayerConnection attval_choice_conn;
     LayerConnection attix_choice_conn;
+
+    LayerConnection choice_out_conn;
     
 
     EffortRegulationModel() {
@@ -421,6 +425,11 @@ class EffortRegulationModel implements NetworkModule {
         attval_choice_conn = new LayerConnection(attention_mod.layer("value"), target_choice_mod.acc.layer("value"), att_spec);
         attix_choice_conn = new LayerConnection(attention_mod.layer("spatial_ix"), target_choice_mod.acc.layer("spatial_ix"), att_spec);
 
+        ConnectionSpec choiceout_spec = new ConnectionSpec(oto_spec);
+        choiceout_spec.post_startix = 0;
+        choiceout_spec.post_endix = 1;
+        choice_out_conn = new LayerConnection(target_choice_mod.layer("out"), out_layer, choiceout_spec);
+
         
         ix = 0;
         // connections = new Connection[8];
@@ -463,6 +472,8 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(valence_att_conn);
         connections.add(attval_choice_conn);
         connections.add(attix_choice_conn);
+
+        connections.add(choice_out_conn);
     
     }
 
