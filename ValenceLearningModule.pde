@@ -69,7 +69,7 @@ class ValenceLearningModule implements NetworkModule {
         // connection spec
         choline_spec.proj="full";
         choline_spec.rnd_type="uniform" ;
-        choline_spec.rnd_mean=0.5;
+        choline_spec.rnd_mean=0.05; // 2022-02-15: if this is too high, both choices will have too high avoidance, and "sum" will not be excited above threshold
         choline_spec.rnd_var=0.0;
         choline_spec.type = ACETYLCHOLINE;
 
