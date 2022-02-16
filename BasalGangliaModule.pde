@@ -1,9 +1,9 @@
 class BasalGangliaModule implements NetworkModule {
-    static final String STR_D1 = "striatal_d1";
-    static final String STR_D2 = "striatal_d2";
+    static final String STR_D1 = "striatal_d1"; // go (in)
+    static final String STR_D2 = "striatal_d2"; // brake (in)
     static final String GPE = "gpe"; // globus pallidus externa
-    static final String STN = "stn"; // subthalamic nucleus
-    static final String GPI = "gpi"; // globus pallidus interna
+    static final String STN = "stn"; // subthalamic nucleus - nonspecific brake (in)
+    static final String GPI = "gpi"; // globus pallidus interna (out)
     static final String SNC = "snc"; // subst nigra pars compacta
     
     String name = "BasalGangliaModule";
