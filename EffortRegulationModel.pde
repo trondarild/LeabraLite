@@ -46,6 +46,7 @@ class EffortRegulationModel implements NetworkModule {
     int number_size = 10;
     int valence_size = 2;
     int rulectx_size = 3; // handle max rules per task ctx
+    int num_behaviours = 1; // only push button
 
     int fill_col = 60;
     int boundary_w = 900; 
@@ -100,6 +101,7 @@ class EffortRegulationModel implements NetworkModule {
     ChoiceModule target_choice_mod;
     ChoiceModule beh_choice_mod; // check if can be used
     BasalGangliaModule bg_mod; 
+    ThalamusModule thal_mod; // simplest possible
     ModeModule rule_ctx_mod; // active rule for each task
     SpatialAttentionBBoxModule attention_mod;
 
@@ -119,7 +121,8 @@ class EffortRegulationModel implements NetworkModule {
     Layer color_layer;
     Layer number_layer;
     Layer reward_layer;
-    Layer out_layer;
+    Layer target_out_layer;
+    Layer beh_out_layer; // from BG
 
     Layer rulectx_prederror_layer; // used to drive effortful rule context
     Layer rulectxdisinh_layer; // for changing rule ctx via dendrite conn
@@ -129,7 +132,7 @@ class EffortRegulationModel implements NetworkModule {
     // connections
     ConnectionSpec full_spec = new ConnectionSpec();
     ConnectionSpec oto_spec;
-    LayerConnection decdemand_out_conn; // population to gain
+    LayerConnection decdemand_target_out_conn; // population to gain
 
     LayerConnection inp_task_ctx_conn; // divide up input vec so see what simulation is
     LayerConnection inp_temp_ctx_conn;
@@ -174,6 +177,10 @@ class EffortRegulationModel implements NetworkModule {
     DendriteConnection tempctx_attchoice_conn; // inhibit attention->choice until needed
     
     LayerConnection fb_valence_conn; // dopa when answering correctly
+
+    LayerConnection target_bg_conn; // motivate "push button"
+    LayerConnection bg_thal_conn; // bg to thalamus
+    LayerConnection thal_behout_conn; // engage motor sys
     
 
     EffortRegulationModel() {
@@ -200,6 +207,9 @@ class EffortRegulationModel implements NetworkModule {
 
         UnitSpec auto_unit_spec = new UnitSpec(excite_unit_spec);
         auto_unit_spec.bias = 0.1;
+
+        UnitSpec fast_leak_spec = new UnitSpec(excite_unit_spec);
+        fast_leak_spec.g_bar_l = excite_unit_spec.g_bar_l + 0.2;
 
         // connection spec
         full_spec.proj="full";
@@ -229,13 +239,15 @@ class EffortRegulationModel implements NetworkModule {
         effort_mod = new EffortModule(effortsize, "Effort (anterior insula)");
         target_choice_mod = new ChoiceModule("Target choice (ofc)");
         val_learning_mod = new ValenceLearningModule(position_size, "Valence learning (acc)");
-        bg_mod = new BasalGangliaModule(3, "Motivation (bg)");
+        bg_mod = new BasalGangliaModule(num_behaviours, "Motivation (bg)");
+        thal_mod = new ThalamusModule(num_behaviours, "Routing (thalamus)");
         rule_ctx_mod = new ModeModule(rulectx_size, "Rule context (pfc)");
         attention_mod = new SpatialAttentionBBoxModule(position_size, "Spatial attention (pfc)");
 
         // layers
         in_layer = new Layer(inputvecsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (occipital ctx)");
-        out_layer = new Layer(outputsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (target pos)");
+        target_out_layer = new Layer(outputsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (target pos)");
+        beh_out_layer = new Layer(num_behaviours, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (behaviour)");
         task_ctx_layer = new Layer(task_ctx_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Task_ctx");
         temp_ctx_layer = new Layer(temp_ctx_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Temp_ctx");
         position_layer = new Layer(position_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Position");
@@ -251,7 +263,8 @@ class EffortRegulationModel implements NetworkModule {
         layers = new ArrayListExt<Layer>(); //new Layer[9];
         int ix = 0;
         layers.add(in_layer);
-        layers.add(out_layer);
+        layers.add(target_out_layer);
+        layers.add(beh_out_layer);
         layers.add(task_ctx_layer);
         layers.add(temp_ctx_layer);
         layers.add(position_layer);
@@ -269,7 +282,7 @@ class EffortRegulationModel implements NetworkModule {
         decdem_out_spec.proj = "1to1";
         decdem_out_spec.post_startix = 0;
         decdem_out_spec.post_endix = 1;
-        decdemand_out_conn = new LayerConnection(dec_dmnd_rule_mod.layer("out"), out_layer, decdem_out_spec);
+        decdemand_target_out_conn = new LayerConnection(dec_dmnd_rule_mod.layer("out"), target_out_layer, decdem_out_spec);
 
 
         ConnectionSpec[] tmpspec = new ConnectionSpec[7];
@@ -438,7 +451,7 @@ class EffortRegulationModel implements NetworkModule {
         ConnectionSpec choiceout_spec = new ConnectionSpec(oto_spec);
         choiceout_spec.post_startix = 2;
         choiceout_spec.post_endix = 3;
-        choice_out_conn = new LayerConnection(target_choice_mod.layer("out"), out_layer, choiceout_spec);
+        choice_out_conn = new LayerConnection(target_choice_mod.layer("out"), target_out_layer, choiceout_spec);
 
         ConnectionSpec tmpctx_choiceout_spec = new ConnectionSpec(full_inh_spec);
         tmpctx_choiceout_spec.pre_startix = 0;
@@ -448,7 +461,7 @@ class EffortRegulationModel implements NetworkModule {
         ConnectionSpec tmpctx_ruleout_spec = new ConnectionSpec(full_inh_spec);
         tmpctx_ruleout_spec.pre_startix = 1;
         tmpctx_ruleout_spec.pre_endix = 1;
-        tempctx_ruleout_conn = new DendriteConnection(temp_ctx_layer, decdemand_out_conn, tmpctx_ruleout_spec);
+        tempctx_ruleout_conn = new DendriteConnection(temp_ctx_layer, decdemand_target_out_conn, tmpctx_ruleout_spec);
 
         tempctx_attchoice_conn = new DendriteConnection(temp_ctx_layer, attval_choice_conn, tmpctx_choiceout_spec);
         
@@ -457,10 +470,19 @@ class EffortRegulationModel implements NetworkModule {
         posrew_spec.pre_endix = 0;
         fb_valence_conn = new LayerConnection(reward_layer, val_learning_mod.layer("pos_lr"), posrew_spec);
 
+        ConnectionSpec target_bg_spec = new ConnectionSpec(full_spec);
+        target_bg_spec.post_startix = 0;
+        target_bg_spec.post_endix = 0;
+        target_bg_conn = new LayerConnection(target_out_layer, bg_mod.layer("striatal_d1"), target_bg_spec);
+
+        bg_thal_conn = new LayerConnection(bg_mod.layer("gpi"), thal_mod.layer("in"), oto_inh_spec);
+        thal_behout_conn = new LayerConnection(thal_mod.layer("out"), beh_out_layer, oto_spec);
+
+
         ix = 0;
         // connections = new Connection[8];
         connections = new ArrayListExt<Connection>();
-        connections.add(decdemand_out_conn);
+        connections.add(decdemand_target_out_conn);
         connections.add(inp_task_ctx_conn);
         connections.add(inp_temp_ctx_conn);
         connections.add(inp_position_conn);
@@ -505,7 +527,9 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(tempctx_attchoice_conn);
 
         connections.add(fb_valence_conn);
-    
+        connections.add(target_bg_conn);
+        connections.add(bg_thal_conn);
+        connections.add(thal_behout_conn);
     }
 
     String name() {return name;}
@@ -519,6 +543,7 @@ class EffortRegulationModel implements NetworkModule {
         ale.add(target_choice_mod.layers());
         ale.add(val_learning_mod.layers());
         ale.add(bg_mod.layers());
+        ale.add(thal_mod.layers());
         ale.add(rule_ctx_mod.layers());
         ale.add(attention_mod.layers());
         ale.add(layers);
@@ -536,6 +561,7 @@ class EffortRegulationModel implements NetworkModule {
         ale.add(target_choice_mod.connections());
         ale.add(val_learning_mod.connections());
         ale.add(bg_mod.connections());
+        ale.add(thal_mod.connections());
         ale.add(rule_ctx_mod.connections());
         ale.add(attention_mod.connections());
         ale.add(connections);
@@ -549,7 +575,7 @@ class EffortRegulationModel implements NetworkModule {
             case IN:
                 return in_layer; // input
             case OUT:
-                return out_layer; // output
+                return target_out_layer; // output
             default:
                 assert(false): "No layer named '" + l + "' defined, check spelling.";
                 return null;
@@ -661,9 +687,18 @@ class EffortRegulationModel implements NetworkModule {
         bg_mod.boundary_w = 270;
         bg_mod.draw();
 
+        pushMatrix();
+        translate(610, -100);
+        thal_mod.fill_col = this.fill_col + 10;
+        thal_mod.draw();
+        popMatrix();
+        
+
 
         translate(0,220);
-        drawStrip(out_layer.getOutput(), out_layer.name);
+        drawStrip(target_out_layer.output(), target_out_layer.name());
+        translate(200, -20);
+        drawStrip(beh_out_layer.output(), beh_out_layer.name());
         
         popMatrix();
     }
