@@ -1,5 +1,7 @@
 class EffortRegulationModel implements NetworkModule {
     /** 
+        * 2022-02-16
+            * add connection from pred error to BG:STN to brake beh
         * 2022-02-11
             * to fix: answer is yielded from rule module before rule ctx is updated -> wrong answer
             * added reward input, but still get no "sum" in value learning when waiting for stack choice
@@ -247,7 +249,7 @@ class EffortRegulationModel implements NetworkModule {
         // layers
         in_layer = new Layer(inputvecsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (occipital ctx)");
         target_out_layer = new Layer(outputsize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (target pos)");
-        beh_out_layer = new Layer(num_behaviours, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (behaviour)");
+        beh_out_layer = new Layer(num_behaviours, new LayerSpec(false), fast_leak_spec, HIDDEN, "Out (behaviour)");
         task_ctx_layer = new Layer(task_ctx_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Task_ctx");
         temp_ctx_layer = new Layer(temp_ctx_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Temp_ctx");
         position_layer = new Layer(position_size, new LayerSpec(false), excite_unit_spec, HIDDEN, "Position");
