@@ -3,11 +3,12 @@ class ModuleTemplate implements NetworkModule {
     static final String OUT = "out";
     
     String name = "ModuleTemplate";
+    String info;
     
     Layer[] layers = new Layer[2];
     Connection[] connections = new Connection[1];
     int layersize = 2;
-    int fill_col = 60;
+    color fill_col = 60;
     int boundary_w = 220;
     int boundary_h = 100;
 
