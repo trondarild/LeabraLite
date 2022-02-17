@@ -30,7 +30,8 @@ class EffortRegulationModel implements NetworkModule {
     */
 
     static final String IN = "in";
-    static final String OUT = "out";
+    static final String TARGET_OUT = "target_out";
+    static final String BEHAVIOUR_OUT = "behaviour_out";
     
     String name = "EffortRegulationModel";
     
@@ -183,6 +184,7 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection target_bg_conn; // motivate "push button"
     LayerConnection bg_thal_conn; // bg to thalamus
     LayerConnection thal_behout_conn; // engage motor sys
+    LayerConnection predeffort_bg_conn; // pred error brakes behaviour
     
 
     EffortRegulationModel() {
@@ -221,6 +223,9 @@ class EffortRegulationModel implements NetworkModule {
 
         oto_spec = new ConnectionSpec(full_spec);
         oto_spec.proj = "1to1";
+
+        ConnectionSpec oto_weak_spec = new ConnectionSpec(oto_spec);
+        oto_weak_spec.rnd_mean = 0.1;
 
         // modules
         ArrayList<float[][]> rulelist = new ArrayList<float[][]>();
@@ -444,7 +449,7 @@ class EffortRegulationModel implements NetworkModule {
         effortval_spec.rnd_mean = 0.1;
         effortval_spec.rnd_var = 0.;
         effort_valence_conn = new LayerConnection(effort_mod.layer("effort"), val_learning_mod.layer("neg_lr"), effortval_spec);
-        valence_att_conn = new LayerConnection(val_learning_mod.layer("sum"), attention_mod.layer("in"), oto_spec);
+        valence_att_conn = new LayerConnection(val_learning_mod.layer("sum"), attention_mod.layer("in"), oto_weak_spec);
         ConnectionSpec att_spec = new ConnectionSpec(oto_spec);
         att_spec.rnd_mean = 0.125;
         attval_choice_conn = new LayerConnection(attention_mod.layer("value"), target_choice_mod.acc.layer("value"), att_spec);
@@ -479,7 +484,8 @@ class EffortRegulationModel implements NetworkModule {
 
         bg_thal_conn = new LayerConnection(bg_mod.layer("gpi"), thal_mod.layer("in"), oto_inh_spec);
         thal_behout_conn = new LayerConnection(thal_mod.layer("out"), beh_out_layer, oto_spec);
-
+        predeffort_bg_conn = new LayerConnection(rulectx_prederror_layer, bg_mod.layer("stn"), full_spec);
+        
 
         ix = 0;
         // connections = new Connection[8];
@@ -532,6 +538,7 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(target_bg_conn);
         connections.add(bg_thal_conn);
         connections.add(thal_behout_conn);
+        connections.add(predeffort_bg_conn);
     }
 
     String name() {return name;}
@@ -576,8 +583,10 @@ class EffortRegulationModel implements NetworkModule {
         switch(l) {
             case IN:
                 return in_layer; // input
-            case OUT:
+            case TARGET_OUT:
                 return target_out_layer; // output
+            case BEHAVIOUR_OUT:
+                return beh_out_layer;
             default:
                 assert(false): "No layer named '" + l + "' defined, check spelling.";
                 return null;
