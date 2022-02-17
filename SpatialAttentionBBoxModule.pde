@@ -12,7 +12,7 @@ class SpatialAttentionBBoxModule implements NetworkModule {
     int boundary_w = 220;
     int boundary_h = 130;
     boolean do_saccade = true; // whether to do_saccade or saccade
-
+    float freq_scale = 0.07;
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
 
@@ -113,14 +113,16 @@ class SpatialAttentionBBoxModule implements NetworkModule {
         }
         */
         //hysteresis(float in, float prev, float lo_thr, float hi_thr)
-        float sinval = sin(0.07 * ctr++);
+        float sinval = sin(freq_scale * ctr++);
         //ctr = (ctr + 0.5) % 360;
         reset(outval);
         //if(sinval > 0.0) 
         //    outval[0] = in_layer.output()[0];     
         //else
         //    outval[1] = in_layer.output()[1];
-        int ix = sinval > 0.0 ? 0 : 1;
+        float[] in_val = in_layer.output();
+        int ix = (sinval - in_val[0] + in_val[1])   < 0.0 ? 0 : 1; // TODO: stay longer at higher value
+        //int ix = sinval > 0.0 ? 0 : 1; // TODO: stay longer at higher value
         float[] value = {in_layer.output()[ix]};
         value_layer.force_activity(value); //max(outval));
         outval[ix] = 1;
