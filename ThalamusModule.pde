@@ -43,11 +43,11 @@ class ThalamusModule implements NetworkModule {
         excite_unit_spec.act_gain=100;
         excite_unit_spec.tau_net=40;
         excite_unit_spec.g_bar_e=1.0;
-        excite_unit_spec.g_bar_l=0.2;
+        excite_unit_spec.g_bar_l=0.3;
         excite_unit_spec.g_bar_i=0.40;
 
         UnitSpec auto_unit_spec = new UnitSpec(excite_unit_spec);
-        auto_unit_spec.bias = 0.2;
+        auto_unit_spec.bias = 0.3;
 
         // connection spec
         full_spec.proj="full";
