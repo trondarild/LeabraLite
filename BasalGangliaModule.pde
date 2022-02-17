@@ -67,8 +67,10 @@ class BasalGangliaModule implements NetworkModule {
         excite_unit_spec.g_bar_i=0.40;
 
         d1_unit_spec = new UnitSpec(excite_unit_spec);
+        d1_unit_spec.g_bar_l = 0.3;
         d1_unit_spec.receptors.append("D1");
         d1_unit_spec.use_modulators = false; // TODO: turn true
+        
         d2_unit_spec = new UnitSpec(excite_unit_spec);
         d2_unit_spec.receptors.append("D2");
         d2_unit_spec.use_modulators = false; // TODO: turn true
