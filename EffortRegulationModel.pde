@@ -1,5 +1,8 @@
 class EffortRegulationModel implements NetworkModule {
     /** 
+        * 2022-02-17
+            * double check that positive value is registered and that correct answers are given
+            * (fix deficient value buildup in valueaccumulator module - put in test harness)
         * 2022-02-16
             * add connection from pred error to BG:STN to brake beh
         * 2022-02-11
@@ -185,6 +188,7 @@ class EffortRegulationModel implements NetworkModule {
     LayerConnection bg_thal_conn; // bg to thalamus
     LayerConnection thal_behout_conn; // engage motor sys
     LayerConnection predeffort_bg_conn; // pred error brakes behaviour
+    LayerConnection acc_reset_conn; // resets accumulator on pushing button
     
 
     EffortRegulationModel() {
@@ -485,7 +489,8 @@ class EffortRegulationModel implements NetworkModule {
         bg_thal_conn = new LayerConnection(bg_mod.layer("gpi"), thal_mod.layer("in"), oto_inh_spec);
         thal_behout_conn = new LayerConnection(thal_mod.layer("out"), beh_out_layer, oto_spec);
         predeffort_bg_conn = new LayerConnection(rulectx_prederror_layer, bg_mod.layer("stn"), full_spec);
-        
+
+        acc_reset_conn = new LayerConnection(beh_out_layer, target_choice_mod.acc.layer("accumulator"), full_inh_spec);        
 
         ix = 0;
         // connections = new Connection[8];
@@ -539,6 +544,7 @@ class EffortRegulationModel implements NetworkModule {
         connections.add(bg_thal_conn);
         connections.add(thal_behout_conn);
         connections.add(predeffort_bg_conn);
+        connections.add(acc_reset_conn);
     }
 
     String name() {return name;}
