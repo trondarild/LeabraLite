@@ -12,7 +12,7 @@ class SpatialAttentionBBoxModule implements NetworkModule {
     int boundary_w = 220;
     int boundary_h = 130;
     boolean do_saccade = true; // whether to do_saccade or saccade
-    float freq_scale = 0.07;
+    float freq_scale = 0.035;
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
 
