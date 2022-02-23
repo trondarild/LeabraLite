@@ -8,7 +8,7 @@ class ChoiceModule implements NetworkModule {
 
     String name = "ChoiceModule";
     Layer[] layers = new Layer[1];
-    Connection[] connections = new Connection[2];
+    Connection[] connections = new Connection[1];
     int valuesize = 1;
     int choicesize = 2;
     int fill_col = 60;
@@ -28,7 +28,7 @@ class ChoiceModule implements NetworkModule {
     ConnectionSpec oto_spec = new ConnectionSpec();
     ConnectionSpec dopa_spec = new ConnectionSpec();
     LayerConnection acc_choice_conn;
-    LayerConnection reset_conn; // resets accumulator
+    //LayerConnection reset_conn; // resets accumulator
 
     ChoiceModule() {
         this.init();
@@ -78,7 +78,7 @@ class ChoiceModule implements NetworkModule {
         gaba_spec.type = GABA;
 
         acc_choice_conn = new LayerConnection(acc.layer("accumulator"), choice_layer, oto_spec);
-        reset_conn = new LayerConnection( choice_layer, acc.layer("accumulator"), gaba_spec);
+        //reset_conn = new LayerConnection( choice_layer, acc.layer("accumulator"), gaba_spec);
 
 
         int ix = 0;
@@ -86,7 +86,7 @@ class ChoiceModule implements NetworkModule {
 
         ix = 0;
         connections[ix++] = acc_choice_conn;
-        connections[ix++] = reset_conn;
+        //connections[ix++] = reset_conn;
 
     }
 
