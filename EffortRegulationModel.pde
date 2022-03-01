@@ -229,7 +229,7 @@ class EffortRegulationModel implements NetworkModule {
         oto_spec.proj = "1to1";
 
         ConnectionSpec oto_weak_spec = new ConnectionSpec(oto_spec);
-        oto_weak_spec.rnd_mean = 0.1;
+        oto_weak_spec.rnd_mean = 0.5;
 
         // modules
         ArrayList<float[][]> rulelist = new ArrayList<float[][]>();
@@ -455,7 +455,7 @@ class EffortRegulationModel implements NetworkModule {
         effort_valence_conn = new LayerConnection(effort_mod.layer("effort"), val_learning_mod.layer("neg_lr"), effortval_spec);
         valence_att_conn = new LayerConnection(val_learning_mod.layer("sum"), attention_mod.layer("in"), oto_weak_spec);
         ConnectionSpec att_spec = new ConnectionSpec(oto_spec);
-        att_spec.rnd_mean = 0.125;
+        att_spec.rnd_mean = 0.5;
         attval_choice_conn = new LayerConnection(attention_mod.layer("value"), target_choice_mod.acc.layer("value"), att_spec);
         attix_choice_conn = new LayerConnection(attention_mod.layer("spatial_ix"), target_choice_mod.acc.layer("spatial_ix"), att_spec);
 
