@@ -71,8 +71,15 @@ class SpatialAttentionBBoxModule implements NetworkModule {
 
         //in_out_conn = new LayerConnection(in_layer, value_layer, full_spec);
         //ConnectionSpec out_in_connection(value_layer, in_layer)
-        connections = new Connection[0];
-        //connections[0] = in_out_conn;
+        ConnectionSpec oto_inh_spec = new ConnectionSpec();
+        oto_inh_spec.proj = "1to1";
+        oto_inh_spec.type = GABA;
+        oto_inh_spec.rnd_mean = 0.32; // maintains actual input value, maintains dynamic range
+        oto_inh_spec.rnd_var = 0;
+
+        LayerConnection auto_inh_conn = new LayerConnection(in_layer, in_layer, oto_inh_spec);
+        connections = new Connection[1];
+        connections[0] = auto_inh_conn;
         
     }
     String name() {return name;}

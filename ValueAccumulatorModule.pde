@@ -16,7 +16,7 @@ class ValueAccumulatorModule implements NetworkModule {
     String name = "ValueAccumulatorModule";
     
     Layer[] layers = new Layer[4];
-    Connection[] connections = new Connection[6];
+    Connection[] connections = new Connection[7];
     int layersize = 2;
     
     int boundary_w = 320;
@@ -25,6 +25,7 @@ class ValueAccumulatorModule implements NetworkModule {
 
     // units
     UnitSpec excite_unit_spec = new UnitSpec();
+    UnitSpec spatix_unit_spec;
     UnitSpec dopa_unit_spec = new UnitSpec();
 
     // layers
@@ -67,14 +68,21 @@ class ValueAccumulatorModule implements NetworkModule {
         excite_unit_spec.act_gain=100;
         excite_unit_spec.tau_net=40;
         excite_unit_spec.g_bar_e=1.0;
-        excite_unit_spec.g_bar_l=0.1;
+        excite_unit_spec.g_bar_l=0.47;
+        excite_unit_spec.g_l=0.47;
         excite_unit_spec.g_bar_i=0.40;
 
+        spatix_unit_spec = new UnitSpec(excite_unit_spec);
+        spatix_unit_spec.g_bar_l = 0.5;
+        spatix_unit_spec.g_l = 1.0;
+
+
         dopa_unit_spec.receptors.append("D2"); // for resetting
-        dopa_unit_spec.use_modulators = true;
-        dopa_unit_spec.g_bar_l = 2.0;
-        dopa_unit_spec.g_l = 0.1;
+        dopa_unit_spec.use_modulators = false;
+        dopa_unit_spec.g_bar_l = 0.;
+        dopa_unit_spec.g_l = 0.;
         dopa_unit_spec.d2_thr = 0.1;
+        dopa_unit_spec.act_thr = 0.2;
 
         // connection spec
         full_spec.proj="full";
@@ -91,9 +99,15 @@ class ValueAccumulatorModule implements NetworkModule {
         oto_inh_spec = new ConnectionSpec(oto_spec);
         oto_inh_spec.type = GABA;
 
+        ConnectionSpec oto_auto_inh_spec = new ConnectionSpec();
+        oto_auto_inh_spec.proj = "1to1";
+        oto_auto_inh_spec.type = GABA;
+        oto_auto_inh_spec.rnd_mean = 0.32; // maintains actual input value, maintains dynamic range
+        oto_auto_inh_spec.rnd_var = 0;
+
         // layers
         val_in_layer = new Layer(1, new LayerSpec(false), excite_unit_spec, HIDDEN, "Value (in)");
-        spatix_in_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Spatial ix (in)");
+        spatix_in_layer = new Layer(layersize, new LayerSpec(false), spatix_unit_spec, HIDDEN, "Spatial ix (in)");
         inh_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Inhibition");
         //disinh_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Disinhibition");
         acc_out_layer = new Layer(layersize, new LayerSpec(false), dopa_unit_spec, HIDDEN, "Accumulator (out)");
@@ -105,6 +119,7 @@ class ValueAccumulatorModule implements NetworkModule {
         //layers[ix++] = disinh_layer;
         layers[ix++] = acc_out_layer;
 
+        LayerConnection val_auto_inh_conn = new LayerConnection(val_in_layer, val_in_layer, oto_auto_inh_spec);
         val_acc_conn = new LayerConnection(val_in_layer, acc_out_layer, full_spec);
         acc_acc_conn = new LayerConnection(acc_out_layer, acc_out_layer, oto_spec);
         val_inh_conn = new LayerConnection(val_in_layer, inh_layer, full_spec);
@@ -118,6 +133,7 @@ class ValueAccumulatorModule implements NetworkModule {
         connections[ix++] = inh_acc_conn;
         connections[ix++] = spat_acc_conn;
         connections[ix++] = spat_inh_conn;
+        connections[ix++] = val_auto_inh_conn;
 
         // set weights on connections
         float[][] w_sa = {{0,1},{1,0}};
