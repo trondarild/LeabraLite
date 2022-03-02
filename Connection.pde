@@ -538,6 +538,7 @@ class ConnectionSpec{
 
     // for dendrite connections
     //float wt_scale_rel = 1.0;
+    boolean normalize = false; // normalize weights after learning
 
 
     ConnectionSpec(){
@@ -569,6 +570,7 @@ class ConnectionSpec{
         this.post_endix = c.post_endix;
         this.pre_indeces = c.pre_indeces != null ? copyArray(c.pre_indeces) : null;
         this.post_indeces = c.post_indeces != null ? copyArray(c.post_indeces) : null;
+        this.normalize = c.normalize;
     }
 
     void cycle(Connection connection){
@@ -726,6 +728,7 @@ class ConnectionSpec{
         if (this.lrule != ""){
             this.learning_rule(connection);
             this.apply_dwt(connection);
+            if(this.normalize) this.normalize_weights(connection);
         }
         for (Link link : connection.links)
             link.wt = max(0.0, min(1.0, link.wt)); // clipping weights after change
@@ -826,6 +829,26 @@ class ConnectionSpec{
         if   (w <= 0.0) return 0.0;
         else if (w >= 1.0) return 1.0;
         return 1 / (1 + pow(((1 - w) / w) , (1 / this.sig_gain)) / this.sig_off);
+    }
+
+    void normalize_weights(Connection connection) {
+        // only for one-to-one for now
+        boolean dbg = false;
+
+        if(this.proj == "1to1") {
+            float[] w = connection.weights()[0];
+            if(dbg){
+            println();
+            println(connection.name);
+            printArray("normalize before", w);
+            }
+            w = normalize(w);
+            float[][] wm = {w};
+            connection.weights(wm);
+            w = connection.weights()[0];
+            if(dbg) printArray("normalize after", w);
+        }
+
     }
 
 
