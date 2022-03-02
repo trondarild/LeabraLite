@@ -1,8 +1,8 @@
-class ModuleTemplate implements NetworkModule {
+class ThalamusModule implements NetworkModule {
     static final String IN = "in";
     static final String OUT = "out";
     
-    String name = "ModuleTemplate";
+    String name = "ThalamusModule";
     String info;
     
     Layer[] layers = new Layer[2];
@@ -25,12 +25,12 @@ class ModuleTemplate implements NetworkModule {
     LayerConnection in_out_conn; // population to gain
     
 
-    ModuleTemplate() {
+    ThalamusModule() {
         this.init();
     }
 
-    ModuleTemplate(String name) {
-        
+    ThalamusModule(int size, String name) {
+        this.layersize = size;
         this.name = name;
         this.init();
     }
@@ -43,8 +43,11 @@ class ModuleTemplate implements NetworkModule {
         excite_unit_spec.act_gain=100;
         excite_unit_spec.tau_net=40;
         excite_unit_spec.g_bar_e=1.0;
-        excite_unit_spec.g_bar_l=0.1;
+        excite_unit_spec.g_bar_l=0.3;
         excite_unit_spec.g_bar_i=0.40;
+
+        UnitSpec auto_unit_spec = new UnitSpec(excite_unit_spec);
+        auto_unit_spec.bias = 0.3;
 
         // connection spec
         full_spec.proj="full";
@@ -52,16 +55,18 @@ class ModuleTemplate implements NetworkModule {
         full_spec.rnd_mean=0.5;
         full_spec.rnd_var=0.0;
 
-        
+        ConnectionSpec oto_inh_spec = new ConnectionSpec();
+        oto_inh_spec.proj = "1to1";
+        oto_inh_spec.type = GLUTAMATE;
 
-        in_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "In (in)");
+        in_layer = new Layer(layersize, new LayerSpec(false), auto_unit_spec, HIDDEN, "In (in)");
         out_layer = new Layer(layersize, new LayerSpec(false), excite_unit_spec, HIDDEN, "Out (out)");
         
         int layerix = 0;
         layers[layerix++] = in_layer;
         layers[layerix++] = out_layer;
 
-        in_out_conn = new LayerConnection(in_layer, out_layer, full_spec);
+        in_out_conn = new LayerConnection(in_layer, out_layer, oto_inh_spec);
         connections[0] = in_out_conn;
         
     }

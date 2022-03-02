@@ -140,6 +140,7 @@ class IntegratorLink extends Link {
 
 abstract class Connection  {
     String name;
+    String info; // any kind of descriptive, meta, or reference information
     //Layer pre;
     //Layer post;
     ArrayList<Link> links = new ArrayList<Link>();
