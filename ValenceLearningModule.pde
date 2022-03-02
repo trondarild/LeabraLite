@@ -76,23 +76,27 @@ class ValenceLearningModule implements NetworkModule {
 
         oto_learn_spec.proj = "1to1";
         oto_learn_spec.rnd_type="uniform" ;
-        oto_learn_spec.rnd_mean=0.05;
+        oto_learn_spec.rnd_mean=0.5;
         oto_learn_spec.rnd_var=0.0;
         oto_learn_spec.lrule = "delta";
-        oto_learn_spec.lrate = .1;
+        oto_learn_spec.lrate = .95;
+        oto_learn_spec.normalize = true;
 
         ConnectionSpec oto_learn_appr_spec = new ConnectionSpec(oto_learn_spec);
-        oto_learn_appr_spec.rnd_mean = oto_learn_spec.rnd_mean + 0.035; // to force choice
+        //oto_learn_appr_spec.rnd_mean = oto_learn_spec.rnd_mean + 0.035; // to force choice
 
         
         ConnectionSpec oto_exc_spec = new ConnectionSpec(oto_learn_spec);
         oto_exc_spec.lrule = "";
         oto_exc_spec.rnd_mean = sumgain;
         oto_exc_spec.type = GLUTAMATE;
+        oto_exc_spec.normalize = false;
 
         ConnectionSpec oto_inh_spec = new ConnectionSpec(oto_learn_spec);
+        oto_inh_spec.lrule = "";
         oto_inh_spec.rnd_mean = sumgain;
         oto_inh_spec.type = GABA;
+        oto_inh_spec.normalize = false;
 
         chol_w_spec.receptors.append("M1"); // add M1 receptor support to modulate learning rate
 
