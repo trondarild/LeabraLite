@@ -233,8 +233,8 @@ class EffortRegulationModel implements NetworkModule {
 
         // modules
         ArrayList<float[][]> rulelist = new ArrayList<float[][]>();
-        rulelist.add(transpose(oddevenrule));
-        rulelist.add(transpose(lt5rule));
+        rulelist.add(transpose(lt5rule)); // left, blue: < 5
+        rulelist.add(transpose(oddevenrule)); // right, purple: even
         dec_dmnd_rule_mod = new RuleModule(rulelist, "Decision demand rules (pfc)");
 
         rulelist = new ArrayList<float[][]>();
@@ -490,7 +490,9 @@ class EffortRegulationModel implements NetworkModule {
         thal_behout_conn = new LayerConnection(thal_mod.layer("out"), beh_out_layer, oto_spec);
         predeffort_bg_conn = new LayerConnection(rulectx_prederror_layer, bg_mod.layer("stn"), full_spec);
 
-        acc_reset_conn = new LayerConnection(beh_out_layer, target_choice_mod.acc.layer("accumulator"), full_inh_spec);        
+        ConnectionSpec acc_reset_spec = new ConnectionSpec(full_inh_spec);
+        acc_reset_spec.rnd_mean = 0.125;
+        acc_reset_conn = new LayerConnection(beh_out_layer, target_choice_mod.acc.layer("accumulator"), acc_reset_spec);        
 
         ix = 0;
         // connections = new Connection[8];
