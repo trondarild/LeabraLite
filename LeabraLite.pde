@@ -11,8 +11,12 @@ MidiBus myBus;
 int midiDevice  = 0;
 
 // TestTemplate test = new TestTemplate(); // template for tests or models
-TestEffortAchDecisionModules test = new TestEffortAchDecisionModules();
+// TestEffortAchDecisionModules test = new TestEffortAchDecisionModules();
 // TestChoiceMod test = new TestChoiceMod();
+// TestCtxChangeWithRecruitment test = new TestCtxChangeWithRecruitment();
+// TestEffortContextSwitch test = new TestEffortContextSwitch();
+ TestAdenoModel test = new TestAdenoModel();
+//TestModeMod test = new TestModeMod();
 
 
 void setup(){
@@ -31,7 +35,7 @@ void update(){
 void draw(){
 	update();
 	background(51);
-	
+	scale(0.6);
 	test.draw();
 }
 

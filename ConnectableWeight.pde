@@ -11,7 +11,8 @@ class ConnectableWeight implements Connectable {
     */
     String name;
     ArrayList<Float> inh_inputs = new ArrayList<Float>();
-    ArrayList<Pair<Integer, Float> > mod_inputs = new ArrayList<Pair<Integer, Float> >(); // neuromodulators
+    // ArrayList<Pair<Integer, Float> > mod_inputs = new ArrayList<Pair<Integer, Float> >(); // neuromodulators
+    ArrayList<Modulator> mod_inputs = new ArrayList<Modulator>(); // neuromodulators
     ConnectableParams params;
     private float wt; // actual weight to be set on link if not inhibited
     float lrate; // modulated learning rate to be set on link
@@ -42,7 +43,7 @@ class ConnectableWeight implements Connectable {
     void add_inhibitory(float a) {inh_inputs.add(a);}
     void add_excitatory(float a) {} // not applicable
     void add_modulator(int type, float a) {
-        this.mod_inputs.add(new Pair<Integer, Float>(type, a));
+        this.mod_inputs.add(new Modulator(type, a));
     } 
     float act() {return this.params.act;} // TODO: this should be from the inh interneuron unit, not from the pyramidal
     float act_ext() {return 0;} // cannot be activated by direct current
@@ -87,9 +88,9 @@ class ConnectableWeightSpec {
         float lratemod = 0;
         
         if(unit.mod_inputs.size() > 0){
-            for (Pair<Integer, Float> p: unit.mod_inputs){
-                float val = p.getValue();
-                switch (p.getKey()) {
+            for (Modulator p: unit.mod_inputs){
+                float val = p.value();
+                switch (p.type()) {
                     case ACETYLCHOLINE:
                         if(receptors.hasValue("M1")) // M1 can modulate learning rate
                             lratemod += val;
