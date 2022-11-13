@@ -855,5 +855,17 @@ class ConnectionSpec{
 
 }
 
+class Modulator{
+    int type;
+    float value;
+
+    Modulator(int t, float v){
+        this.type = t;
+        this.value = v;
+    }
+
+    int type(){return type;}
+    float value(){return value;}
+}
 
 // 2022-01-09 TODO: add ReservoirConnection for Connection to, from reservoir and unit

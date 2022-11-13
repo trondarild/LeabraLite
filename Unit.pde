@@ -8,7 +8,7 @@ as possible to understand. It is not in any way optimized for performance.
 // type of layer and correspondingly, unit behaviors
 import java.util.HashMap;
 import java.util.Map;
-import javafx.util.Pair;
+//import javafx.util.Pair;
 
 
 static int INPUT  = 0;
@@ -35,7 +35,8 @@ class Unit implements Connectable {
     //float avg_s_eff; // linear mix of short and medium term avg, used in learning
     ArrayList<Float> ex_inputs = new ArrayList<Float>();
     ArrayList<Float> inh_inputs = new ArrayList<Float>(); // TAT 2021-12-10: added inh inputs, different from internal inh
-    ArrayList<Pair<Integer, Float> > mod_inputs = new ArrayList<Pair<Integer, Float> >(); // neuromodulators
+    // ArrayList<Pair<Integer, Float> > mod_inputs = new ArrayList<Pair<Integer, Float> >(); // neuromodulators
+    ArrayList<Modulator> mod_inputs = new ArrayList<Modulator>(); // neuromodulators
     
     float g_e; // 
     float I_net;
@@ -197,7 +198,7 @@ class Unit implements Connectable {
     }
 
     void add_modulator(int type, float a) {
-        this.mod_inputs.add(new Pair<Integer, Float>(type, a));
+        this.mod_inputs.add(new Modulator(type, a));
     }
 
     void update_avg_l(){
@@ -481,9 +482,10 @@ class UnitSpec{
         unit.r_a2 = 0;
         unit.r_m1 = 0;
         if(unit.mod_inputs.size() > 0){
-            for (Pair<Integer, Float> p: unit.mod_inputs){
-                float val = p.getValue();
-                switch (p.getKey()) {
+            for (Modulator p: unit.mod_inputs){
+                // float val = p.getValue();
+                float val = p.value();
+                switch (p.type()) {
                     case ADENOSINE:
                         if(receptors.hasValue("A1"))
                             unit.r_a1 += val < this.a1_thr ? val : 0.0;
@@ -777,3 +779,4 @@ class UnitSpec{
     }
 
 }
+
